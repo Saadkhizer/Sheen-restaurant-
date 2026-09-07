@@ -1,0 +1,186 @@
+@import "tailwindcss";
+
+/* ===================================================================
+   SHEEN — design tokens
+
+   Structure follows web-project-foundation/assets/globals.css; colour
+   system follows restaurant-noir-ui. Every value below was computed and
+   verified by scripts/contrast.py — all pairs clear WCAG AA. Re-run that
+   script after ANY colour change here.
+
+   DARK ONLY. There is deliberately no prefers-color-scheme block:
+   restaurant-noir-ui is a dark-only language, and a light variant of it
+   isn't a lighter version of the same thing, it's a different design.
+
+   Rebranding = editing this file only. No component may contain a hex.
+   =================================================================== */
+
+:root {
+  /* ---- Ground -----------------------------------------------------
+     Base is built FROM the accent hue at low saturation (not neutral
+     grey) so the hero bloom blends instead of banding. Never #000. */
+  --background: #100D0C;
+  --surface: #1B1716;
+  --border: #2E2826;
+
+  /* ---- Type ------------------------------------------------------- */
+  --foreground: #F7F3F0; /* 17.54:1 on background */
+  --muted: #A49994; /* 6.97:1 — readable but subordinate by design */
+
+  /* ---- Accent -----------------------------------------------------
+     Hue 14° — sampled from Sheen's own menu boards (#D04129 red,
+     #E0581E orange), hue kept, lightness re-fitted to a near-black
+     ground per palettes.md's derivation procedure.
+
+     --accent-text is intentionally identical to --accent here: unlike
+     the Crimson preset, this accent already clears 4.5:1 on BOTH
+     background (5.62) and surface (5.17), so no lightened sibling is
+     needed. The token is kept so components stay portable.
+
+     --accent-foreground is near-black, NOT white. White on this accent
+     scores 2.9:1 and fails. This is the most common way the style gets
+     copied wrong. */
+  --accent: #F05728;
+  --accent-text: #F05728;
+  --accent-deep: #A23210;
+  --accent-foreground: #100D0C;
+
+  /* ---- Semantic tones ---------------------------------------------
+     Kept separate from --accent so they survive a rebrand, but
+     deliberately desaturated so the page still reads as single-accent.
+     Reserved for order-state UI (confirmed / preparing / failed) —
+     never decorative. --tone-critical sits at hue 356°, pulled cool and
+     away from the accent's 14° so a failed-payment state cannot be
+     mistaken for brand red. */
+  --tone-positive: #72B696;
+  --tone-caution: #D3B069;
+  --tone-critical: #D36970;
+
+  /* ---- Logo -----------------------------------------------------
+     Sampled directly from the client's own sign (storefront billboard
+     + Instagram assets): the "SH[glyph]N" wordmark's teal centre glyph.
+     The orange letterforms reuse --accent -- they're close enough
+     in-family (both ~14-15° hue) that a second red/orange token would
+     just be two names for the same colour. */
+  --brand-teal: #18A199;
+
+  /* ---- Bloom (hero glow) ------------------------------------------
+     Position tracks the dish's optical centre, not the viewport's.
+     If you can see where the gradient ends, lower the strength. */
+  --bloom-x: 68%;
+  --bloom-y: 46%;
+  --bloom-strength: 0.24;
+  --bloom-blur: 28px;
+
+  /* ---- Ambient wash (AmbientBackground) ---------------------------
+     RGB triples, not hex — consumed as rgb(var(--x) / alpha). */
+  --ambient-one: 240 87 40;
+  --ambient-two: 162 50 16;
+  --ambient-strength: 0.06;
+  --grain-opacity: 0.045;
+
+  /* ---- Radius -----------------------------------------------------
+     Curves are for section seams only. Cards and buttons stay
+     conventionally rounded — organic card shapes read as a blob trend. */
+  --radius-card: 20px;
+  --radius-panel: 16px;
+  --radius-pill: 999px;
+
+  /* ---- Type scale ------------------------------------------------- */
+  --display-size: clamp(2.75rem, 7vw, 5.5rem);
+  --display-tracking: -0.03em;
+  --display-leading: 0.95;
+  --label-size: 0.72rem;
+  --label-tracking: 0.18em;
+
+  /* ---- Rhythm ----------------------------------------------------- */
+  --section-gap: 6rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-surface: var(--surface);
+  --color-accent: var(--accent);
+  --color-accent-text: var(--accent-text);
+  --color-accent-deep: var(--accent-deep);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-positive: var(--tone-positive);
+  --color-caution: var(--tone-caution);
+  --color-critical: var(--tone-critical);
+  --color-brand-teal: var(--brand-teal);
+
+  --radius-card: var(--radius-card);
+  --radius-panel: var(--radius-panel);
+
+  /* System stack, NOT next/font/google — that loader fetches from
+     Google during compilation and can silently stall the dev server
+     (critical-fixes.md #3). If Sheen supplies a brand typeface, use
+     next/font/local with the file committed to the repo. */
+  --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-display);
+  --font-mono: ui-monospace, "Cascadia Code", "Segoe UI Mono", Consolas,
+    "SFMono-Regular", Menlo, monospace;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Micro-label above the hero headline. Anchors the oversized display
+   type — without it the headline floats. */
+.noir-label {
+  font-size: var(--label-size);
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.noir-bloom {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    52% 46% at var(--bloom-x) var(--bloom-y),
+    color-mix(in oklch, var(--accent) calc(var(--bloom-strength) * 100%), transparent) 0%,
+    color-mix(in oklch, var(--accent) calc(var(--bloom-strength) * 35%), transparent) 42%,
+    transparent 72%
+  );
+  filter: blur(var(--bloom-blur));
+}
+
+@media (max-width: 768px) {
+  :root {
+    --bloom-strength: 0.34;
+    --section-gap: 3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--foreground);
+}

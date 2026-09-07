@@ -1,0 +1,72 @@
+-- Sheen menu seed. Prices in PAISA (rupees x 100).
+-- Sourced from the client's foodpanda listing, August 2026 -- verify
+-- against the current in-store menu before go-live.
+
+insert into public.menu_categories (slug, name, sort_order) values
+  ('mains', 'Mains', 1),
+  ('deals', 'Deals Sheels', 2),
+  ('sides', 'Sides', 3)
+on conflict (slug) do nothing;
+
+insert into public.menu_items
+  (category_id, slug, name, description, price_paisa, is_popular, sort_order)
+values
+  ((select id from public.menu_categories where slug='mains'),
+   'formal-sheen', 'Formal Sheen', 'Grilled chicken, pickles, garlic sauce and hummus in our house bread', 88800, true, 0),
+  ((select id from public.menu_categories where slug='mains'),
+   'kf-sheen', 'KF Sheen', 'Battered chicken tenders, pickles, chili mayo, garlic sauce and hummus in our house bread', 88800, true, 1),
+  ((select id from public.menu_categories where slug='mains'),
+   'af-sheen', 'AF Sheen', 'Grilled chicken and sausage, pickles, chutney, garlic sauce and hummus in our house bread', 99900, true, 2),
+  ((select id from public.menu_categories where slug='mains'),
+   'loaded-sheen', 'Loaded Sheen', 'Grilled chicken with hummus, garlic sauce and chili mayo, topped with fresh green chutney', 88800, false, 3),
+  ((select id from public.menu_categories where slug='mains'),
+   'beef-sheen', 'Beef Sheen', 'Tender beef with pickles, garlic sauce, tahini, chili mayo and fries', 122200, true, 4),
+  ((select id from public.menu_categories where slug='mains'),
+   'small-a-kf', 'Small-A KF Sheen', 'Same taste, smaller portion. 6 inch wrap', 66600, false, 5),
+  ((select id from public.menu_categories where slug='mains'),
+   'small-a-formal', 'Small-A Formal Sheen', 'Same taste, smaller portion. 6 inch wrap', 66600, false, 6),
+  ((select id from public.menu_categories where slug='mains'),
+   'small-a-af', 'Small-A AF Sheen', 'Same taste, smaller portion. 6 inch wrap', 77700, false, 7),
+  ((select id from public.menu_categories where slug='mains'),
+   'small-a-beef', 'Small-A Beef', 'Same taste, smaller portion. 6 inch wrap', 99900, false, 8),
+  ((select id from public.menu_categories where slug='deals'),
+   'solo-sheen', 'Solo Sheen', 'Formal or KF Sheen with fries and a drink', 122200, false, 9),
+  ((select id from public.menu_categories where slug='deals'),
+   'solo-af', 'Solo AF-Sheen', 'AF Sheen with fries and a drink', 133300, false, 10),
+  ((select id from public.menu_categories where slug='deals'),
+   'solo-beef', 'Solo Beef Sheen', 'Beef shawarma with fries and a drink', 155500, false, 11),
+  ((select id from public.menu_categories where slug='deals'),
+   'double-sawari', 'Double Sawari', '1 Formal and 1 KF Sheen, 2 fries and 2 drinks', 233300, false, 12),
+  ((select id from public.menu_categories where slug='deals'),
+   'teen-batta-sheen', 'Teen Batta Sheen', '1 Formal, 1 KF and 1 AF Sheen with 3 fries and 3 drinks', 355500, false, 13),
+  ((select id from public.menu_categories where slug='deals'),
+   'family-sheen', 'Family Sheen', '1 Formal, 1 KF, 1 AF, 1 Loaded Sheen, 1 loaded fries, 1 hummus and pita, 4 drinks', 488800, false, 14),
+  ((select id from public.menu_categories where slug='deals'),
+   'shash-o-panj', 'Shash-O-Panj', '1 Formal, 1 KF, 1 AF, 1 Loaded and 1 Beef Sheen with 3 fries and 3 drinks', 555500, false, 15),
+  ((select id from public.menu_categories where slug='sides'),
+   'loaded-fries', 'Loaded Fries', 'Grilled chicken with pickles and jalapenos, garlic sauce and chili mayo on crispy fries', 88800, true, 16),
+  ((select id from public.menu_categories where slug='sides'),
+   'hummus-pita', 'Hummus & Pita', 'Creamy hummus with our house bread', 50000, true, 17),
+  ((select id from public.menu_categories where slug='sides'),
+   'saucy-fries', 'Saucy Fries', 'Our classic fries elevated with house sauces', 44400, false, 18),
+  ((select id from public.menu_categories where slug='sides'),
+   'plain-fries', 'Plain Fries', 'Lightly battered fries', 33300, true, 19),
+  ((select id from public.menu_categories where slug='sides'),
+   'double-choc-cookie', 'Double Chocolate Cookie', 'Centre filled with molten chocolate', 37500, false, 20),
+  ((select id from public.menu_categories where slug='sides'),
+   'choc-chip-cookie', 'Choco Chip Cookie', 'Something sweet to chase the Sheen', 35000, false, 21),
+  ((select id from public.menu_categories where slug='sides'),
+   'limo-soda', 'Limo Soda', 'Our in-house thirst quencher', 20000, false, 22),
+  ((select id from public.menu_categories where slug='sides'),
+   'coke', 'Coke', '300ml bottle', 13000, false, 23),
+  ((select id from public.menu_categories where slug='sides'),
+   'sprite', 'Sprite', '300ml bottle', 13000, false, 24),
+  ((select id from public.menu_categories where slug='sides'),
+   'garlic-sauce', 'Garlic Sauce (Toum)', 'A side of our signature garlic sauce', 12000, false, 25),
+  ((select id from public.menu_categories where slug='sides'),
+   'chili-mayo', 'Chili Mayo', 'A side of our tangy chili mayo', 12000, false, 26),
+  ((select id from public.menu_categories where slug='sides'),
+   'cheese', 'Cheese', 'When you want to make your Sheen cheesy', 11100, false, 27),
+  ((select id from public.menu_categories where slug='sides'),
+   'jalapeno', 'Jalapeno', 'Make it spicy', 5000, false, 28)
+on conflict (slug) do nothing;
