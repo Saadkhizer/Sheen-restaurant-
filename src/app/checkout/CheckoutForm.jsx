@@ -1,219 +1,77 @@
 "use client";
-
-import { useActionState, useState } from "react";
+import {useRef,useState} from "react";
+import {useRouter} from "next/navigation";
 import Link from "next/link";
-import { useCart } from "@/lib/cart";
-import { placeOrder } from "@/app/actions";
-import { rupees, DELIVERY_FEE_PAISA, MIN_ORDER_PAISA } from "@/lib/money";
-
-const field =
-  "w-full rounded-[var(--radius-panel)] border border-border bg-surface px-4 py-3 text-foreground placeholder:text-muted focus:border-accent focus:outline-none";
-
-export default function CheckoutForm({ methods }) {
-  const { items, subtotal, add, dec, remove, count } = useCart();
-  const [fulfilment, setFulfilment] = useState("delivery");
-  const [method, setMethod] = useState("cod");
-  const [state, formAction, pending] = useActionState(placeOrder, {});
-
-  const delivery = fulfilment === "delivery" ? DELIVERY_FEE_PAISA : 0;
-  const total = subtotal + delivery;
-  const belowMinimum = subtotal > 0 && subtotal < MIN_ORDER_PAISA;
-
-  if (count === 0) {
-    return (
-      <div className="rounded-[var(--radius-panel)] border border-border bg-surface p-8 text-center">
-        <p className="mb-5 text-muted">Your cart is empty.</p>
-        <Link
-          href="/menu"
-          className="inline-flex h-12 items-center rounded-full bg-accent px-7 font-semibold text-accent-foreground transition-colors hover:bg-accent-deep hover:text-foreground"
-        >
-          Browse the menu
-        </Link>
-      </div>
-    );
+import {useCart} from "@/lib/cart";
+import {IS_DEMO,restaurant} from "@/lib/restaurantData";
+import {orderTotals,MIN_ORDER_PAISA,rupees} from "@/lib/money";
+import {prepareDemoOrder,validateCustomer,whatsappMessage} from "@/lib/orders/demo";
+import Icon from "@/components/site/Icon";
+import CartLines from "@/components/site/CartLines";
+import WhatsAppPreview from "@/components/site/WhatsAppPreview";
+export default function CheckoutForm(){
+ const cart=useCart();const router=useRouter();const form=useRef(null);const submitting=useRef(false);const submissionId=useRef(null);
+ const [fulfilment,setFulfilment]=useState("delivery");const [errors,setErrors]=useState({});const [error,setError]=useState("");
+ const [pending,setPending]=useState(false);const [preview,setPreview]=useState(false);const [message,setMessage]=useState("");
+ const totals=orderTotals(cart.items,fulfilment);const belowMinimum=totals.subtotal<MIN_ORDER_PAISA;
+ function details(){
+  const data=Object.fromEntries(new FormData(form.current));data.fulfilment=fulfilment;
+  return validateCustomer(data);
+ }
+ function displayErrors(fieldErrors){
+  setErrors(fieldErrors);setError("");
+  const first=Object.keys(fieldErrors)[0];
+  if(first)form.current.elements.namedItem(first)?.focus();
+ }
+ function openPreview(){
+  const result=details();
+  if(Object.keys(result.errors).length){displayErrors(result.errors);return;}
+  setErrors({});setMessage(whatsappMessage(cart.items,result.customer,totals));setPreview(true);
+ }
+ function submit(event){
+  event.preventDefault();
+  if(submitting.current)return;
+  const result=details();
+  if(Object.keys(result.errors).length){displayErrors(result.errors);return;}
+  if(!IS_DEMO){setError("Direct ordering is not connected. Please use Sheen’s Foodpanda listing.");return;}
+  submitting.current=true;setPending(true);setErrors({});setError("");
+  try{
+   submissionId.current ||= crypto.randomUUID();
+   const prepared=prepareDemoOrder(cart.items,result.customer,submissionId.current);
+   if(prepared.error||prepared.errors){
+    setError(prepared.error||"Please check your details.");setErrors(prepared.errors||{});submitting.current=false;setPending(false);return;
+   }
+   cart.complete(prepared.order.items.map(line=>line.key));
+   router.push("/order/"+prepared.order.code);
+  }catch{
+   setError("We couldn’t prepare the demo. Your bag is still here; please try again.");
+   submitting.current=false;setPending(false);
   }
-
-  return (
-    <form action={formAction} className="space-y-8">
-      {/* The cart is sent as ids + quantities only. The server re-reads every
-          price from the database and recomputes the total, so the figures
-          below are a preview -- not the source of truth. */}
-      <input
-        type="hidden"
-        name="cart"
-        value={JSON.stringify(items.map((l) => ({ id: l.id, qty: l.qty })))}
-      />
-
-      <section className="rounded-[var(--radius-panel)] border border-border bg-surface p-6">
-        <h2 className="mb-5 text-lg font-semibold">Your order</h2>
-        <ul className="space-y-4">
-          {items.map((line) => (
-            <li key={line.id} className="flex items-center justify-between gap-4">
-              <div className="min-w-0">
-                <p className="truncate font-medium">{line.name}</p>
-                <p className="text-sm text-muted">{rupees(line.price_paisa)} each</p>
-              </div>
-              <div className="flex shrink-0 items-center gap-3">
-                {/* Stepper: circular surface buttons either side of the count */}
-                <button
-                  type="button"
-                  onClick={() => dec(line.id)}
-                  aria-label={`Remove one ${line.name}`}
-                  className="h-9 w-9 cursor-pointer rounded-full border border-border text-muted transition-colors hover:text-accent"
-                >
-                  −
-                </button>
-                <span className="w-5 text-center tabular-nums">{line.qty}</span>
-                <button
-                  type="button"
-                  onClick={() => add(line)}
-                  aria-label={`Add one ${line.name}`}
-                  className="h-9 w-9 cursor-pointer rounded-full border border-border text-muted transition-colors hover:text-accent"
-                >
-                  +
-                </button>
-                <button
-                  type="button"
-                  onClick={() => remove(line.id)}
-                  className="cursor-pointer text-sm text-muted underline-offset-4 hover:text-critical hover:underline"
-                >
-                  Remove
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">How should we get it to you?</h2>
-        <div className="flex gap-3">
-          {[
-            ["delivery", "Delivery"],
-            ["takeaway", "Takeaway"],
-          ].map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setFulfilment(id)}
-              className={`h-12 cursor-pointer rounded-full px-6 font-semibold transition-colors ${
-                fulfilment === id
-                  ? "bg-accent text-background"
-                  : "border border-border bg-surface text-muted hover:text-foreground"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <input type="hidden" name="fulfilment" value={fulfilment} />
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-2 block text-sm text-muted">Your name</span>
-            <input name="name" required className={field} placeholder="Saad" />
-          </label>
-          <label className="block">
-            <span className="mb-2 block text-sm text-muted">Mobile number</span>
-            <input
-              name="phone"
-              required
-              inputMode="tel"
-              className={field}
-              placeholder="0300 1234567"
-            />
-          </label>
-        </div>
-
-        {fulfilment === "delivery" && (
-          <>
-            <label className="block">
-              <span className="mb-2 block text-sm text-muted">Delivery address</span>
-              <input
-                name="address"
-                required
-                className={field}
-                placeholder="House 12, Street 4, Sector G, Bahria Enclave"
-              />
-            </label>
-            <label className="block">
-              <span className="mb-2 block text-sm text-muted">
-                Notes for the rider (optional)
-              </span>
-              <input name="notes" className={field} placeholder="Gate code, landmark…" />
-            </label>
-          </>
-        )}
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Payment</h2>
-        {methods.map((m) => (
-          <label
-            key={m.id}
-            className={`flex cursor-pointer items-start gap-3 rounded-[var(--radius-panel)] border p-4 transition-colors ${
-              method === m.id ? "border-accent bg-surface" : "border-border bg-surface"
-            } ${m.enabled ? "" : "cursor-not-allowed opacity-55"}`}
-          >
-            <input
-              type="radio"
-              name="payment_method"
-              value={m.id}
-              checked={method === m.id}
-              disabled={!m.enabled}
-              onChange={() => setMethod(m.id)}
-              className="mt-1 accent-[var(--accent)]"
-            />
-            <span>
-              <span className="block font-medium">{m.label}</span>
-              <span className="block text-sm text-muted">
-                {m.enabled ? m.hint : "Not available yet — coming soon."}
-              </span>
-            </span>
-          </label>
-        ))}
-      </section>
-
-      <section className="rounded-[var(--radius-panel)] border border-border bg-surface p-6">
-        <dl className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <dt className="text-muted">Subtotal</dt>
-            <dd className="tabular-nums">{rupees(subtotal)}</dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-muted">Delivery</dt>
-            <dd className="tabular-nums">{delivery ? rupees(delivery) : "—"}</dd>
-          </div>
-          <div className="flex justify-between border-t border-border pt-3 text-base font-bold">
-            <dt>Total</dt>
-            <dd className="tabular-nums text-accent-text">{rupees(total)}</dd>
-          </div>
-        </dl>
-      </section>
-
-      {belowMinimum && (
-        <p className="rounded-[var(--radius-panel)] border border-caution/40 bg-surface p-4 text-sm text-caution">
-          Minimum order is {rupees(MIN_ORDER_PAISA)}. Add {rupees(MIN_ORDER_PAISA - subtotal)}{" "}
-          more to check out.
-        </p>
-      )}
-
-      {state?.error && (
-        <p
-          role="alert"
-          className="rounded-[var(--radius-panel)] border border-critical/40 bg-surface p-4 text-sm text-critical"
-        >
-          {state.error}
-        </p>
-      )}
-
-      <button
-        type="submit"
-        disabled={pending || belowMinimum}
-        className="h-13 w-full cursor-pointer rounded-full bg-accent py-4 font-bold text-accent-foreground transition-colors hover:bg-accent-deep hover:text-foreground disabled:cursor-not-allowed disabled:opacity-55"
-      >
-        {pending ? "Placing your order…" : `Place order · ${rupees(total)}`}
-      </button>
-    </form>
-  );
+ }
+ if(!cart.ready||pending)return <div className="empty-state" role="status"><Icon name="bag" size={34}/><h2>{pending?"Preparing your demo…":"Opening your bag…"}</h2><p>{pending?"No order or payment is being sent.":"Your saved picks will be here in a moment."}</p></div>;
+ if(!cart.items.length)return <div className="empty-state"><div className="empty-icon"><Icon name="bag" size={36}/></div><h2>Your bag is still hungry.</h2><p>Choose a shawarma, explore the deals, or add a little something on the side.</p><Link href="/menu" className="button button-teal">Explore the menu <Icon name="arrow"/></Link></div>;
+ return <>
+ <form ref={form} onSubmit={submit} noValidate className="checkout-layout">
+  <div className="checkout-fields">
+   <section className="checkout-panel"><h2><span>01</span>How would you like it?</h2><fieldset className="fulfilment-options"><legend className="sr-only">Fulfilment</legend>{[["delivery","Delivery"],["takeaway","Takeaway"]].map(([value,label])=><label key={value}><input type="radio" name="fulfilment" value={value} checked={fulfilment===value} onChange={()=>setFulfilment(value)}/><Icon name={value==="delivery"?"pin":"bag"} size={19}/>{label}</label>)}</fieldset><p className="field-hint">{fulfilment==="takeaway"?"Collect from "+restaurant.shortAddress+".":"Delivery details are demonstrated using listing information."}</p></section>
+   <section className="checkout-panel"><h2><span>02</span>A few details</h2><div className="field-grid">
+    <label className="field"><span id="name-label">Your name</span><input name="name" aria-labelledby="name-label" autoComplete="name" maxLength={80} required placeholder="Your name" aria-invalid={!!errors.name} aria-describedby={errors.name?"name-error":undefined}/>{errors.name&&<small id="name-error" className="field-error">{errors.name}</small>}</label>
+    <label className="field"><span id="phone-label">Mobile number</span><input name="phone" aria-labelledby="phone-label" type="tel" inputMode="tel" autoComplete="tel" maxLength={20} required placeholder="0300 1234567" aria-invalid={!!errors.phone} aria-describedby={errors.phone?"phone-error":undefined}/>{errors.phone&&<small id="phone-error" className="field-error">{errors.phone}</small>}</label>
+   </div>
+   {fulfilment==="delivery"&&<label className="field"><span id="address-label">Delivery address</span><textarea name="address" aria-labelledby="address-label" autoComplete="street-address" required maxLength={400} placeholder="House, street, sector and a nearby landmark" aria-invalid={!!errors.address} aria-describedby={errors.address?"address-error":undefined}/>{errors.address&&<small id="address-error" className="field-error">{errors.address}</small>}</label>}
+   <label className="field"><span id="notes-label">Anything else? <span className="muted">(optional)</span></span><textarea name="notes" aria-labelledby="notes-label" maxLength={500} placeholder={fulfilment==="delivery"?"Landmark or delivery instructions":"Collection notes"} aria-invalid={!!errors.notes} aria-describedby={errors.notes?"notes-error":undefined}/>{errors.notes&&<small id="notes-error" className="field-error">{errors.notes}</small>}</label>
+   {IS_DEMO&&<p className="field-hint">For this demonstration, use sample details. They stay in this browser session.</p>}
+   </section>
+   <section className="checkout-panel"><h2><span>03</span>{IS_DEMO?"A preview, not a payment":"Ordering options"}</h2><p className="small muted">{IS_DEMO?"Prepare a demo receipt and explore the WhatsApp handoff. No card details, payment, or real restaurant order.":"Online payment and direct ordering are not connected. You can review your order or continue to Foodpanda."}</p></section>
+  </div>
+  <aside className="checkout-panel checkout-aside"><h2>Your Sheen selection</h2><CartLines/><dl className="totals"><div><dt>Subtotal</dt><dd>{rupees(totals.subtotal)}</dd></div><div><dt>{fulfilment==="delivery"?"Delivery":"Takeaway"}</dt><dd>{totals.delivery?rupees(totals.delivery):"No delivery charge"}</dd></div><div><dt>Total</dt><dd>{rupees(totals.total)}</dd></div></dl>
+   {belowMinimum&&<p className="notice">Add {rupees(MIN_ORDER_PAISA-totals.subtotal)} to reach the {rupees(MIN_ORDER_PAISA)} minimum.</p>}
+   {Object.keys(errors).length>0&&<p role="alert" className="form-error">Please check the highlighted details.</p>}
+   {error&&<p role="alert" className="form-error">{error}</p>}
+   {IS_DEMO?<button type="submit" className="button button-orange button-wide checkout-submit" disabled={belowMinimum}>Prepare demo order <Icon name="arrow"/></button>:<a className="button button-orange button-wide" href={restaurant.links.foodpanda} target="_blank" rel="noreferrer">Order on Foodpanda <Icon name="arrow"/></a>}
+   <button type="button" className="button button-outline button-wide mt-3" onClick={openPreview}><Icon name="chat"/>Preview WhatsApp order</button>
+   <p className="demo-note">{IS_DEMO?"Demo only · Nothing is sent to the restaurant.":"Final availability and price require restaurant confirmation."}</p>
+  </aside>
+ </form><WhatsAppPreview open={preview} onClose={()=>setPreview(false)} message={message}/>
+ </>;
 }

@@ -1,84 +1,35 @@
 "use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useCart } from "@/lib/cart";
+import {usePathname} from "next/navigation";
+import {useState} from "react";
+import {useCart} from "@/lib/cart";
+import {restaurant} from "@/lib/restaurantData";
 import Logo from "./Logo";
-import ThemeToggle from "./ThemeToggle";
-
-/* Transparent over the hero, frosted past 80px. The BACKGROUND transitions,
-   never the height -- nav bars that shrink on scroll cause layout jank. */
-export default function SiteHeader() {
-  const [scrolled, setScrolled] = useState(false);
-  const { count, open } = useCart();
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 80);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  return (
-    <header
-      className={`sticky top-0 z-40 border-b transition-colors duration-200 ${
-        scrolled
-          ? "border-border bg-surface/85 backdrop-blur-lg"
-          : "border-transparent"
-      }`}
-    >
-      <div className="mx-auto flex max-w-[1180px] items-center justify-between px-6 py-4">
-        <Link href="/" aria-label="Sheen home">
-          <Logo className="text-2xl" />
-        </Link>
-
-        <nav className="hidden gap-8 md:flex">
-          {[
-            ["Menu", "/menu"],
-            ["Deals", "/menu#deals"],
-            ["Reviews", "/#reviews"],
-            ["Find us", "/#find"],
-          ].map(([label, href]) => (
-            <Link
-              key={href}
-              href={href}
-              className="text-xs uppercase tracking-[0.1em] text-muted transition-colors hover:text-foreground"
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-3">
-        <ThemeToggle />
-        <button
-          type="button"
-          onClick={open}
-          className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full bg-accent px-6 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent-deep hover:text-foreground"
-        >
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M6 8h12l-1.2 12.5a1 1 0 0 1-1 .5H8.2a1 1 0 0 1-1-.5L6 8Z" />
-            <path d="M9 8V6a3 3 0 0 1 6 0v2" />
-          </svg>
-          Cart
-          <AnimatePresence mode="popLayout">
-            {count > 0 && (
-              <motion.span
-                key={count}
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.5, opacity: 0 }}
-                transition={{ type: "spring", damping: 20, stiffness: 400 }}
-                className="rounded-full bg-accent-foreground/15 px-2 py-0.5 text-xs tabular-nums"
-              >
-                {count}
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </button>
-        </div>
-      </div>
-    </header>
-  );
+import Icon from "./Icon";
+import Dialog from "./Dialog";
+const links=[["Home","/"],["Menu","/menu"],["Deals","/menu#deals"],["Find us","/#find"]];
+export default function SiteHeader(){
+ const pathname=usePathname();
+ const {count,open}=useCart();
+ const [navOpen,setNavOpen]=useState(false);
+ return <>
+  <header className="site-header"><div className="container header-inner">
+   <Link href="/" className="brand-lockup" aria-label="Sheen home"><Logo/><span>SHAWARMA & MORE</span></Link>
+   <nav className="desktop-nav" aria-label="Main navigation">{links.map(([label,href])=><Link key={label} href={href} aria-current={pathname===href?"page":undefined}>{label}</Link>)}</nav>
+   <div className="header-actions"><Link className="button button-teal header-order" href="/menu">Order your Sheen <Icon name="arrow" size={17}/></Link>
+    <button className="cart-trigger" onClick={open} aria-label={"Open cart, "+count+" items"}><Icon name="bag"/><span className="cart-label">Bag</span><span className="cart-count">{count}</span></button>
+    <button className="icon-button mobile-menu-trigger" onClick={()=>setNavOpen(true)} aria-label="Open navigation" aria-expanded={navOpen} aria-controls="mobile-navigation"><Icon name="menu"/></button>
+   </div>
+  </div></header>
+  <Dialog open={navOpen} onClose={()=>setNavOpen(false)} title="Explore Sheen" id="mobile-navigation" variant="drawer">
+   <nav className="mobile-drawer-links" aria-label="Mobile navigation">{links.map(([label,href],index)=><Link key={label} href={href} onClick={()=>setNavOpen(false)} aria-current={pathname===href?"page":undefined}><span>0{index+1}</span>{label}<Icon name="arrow"/></Link>)}</nav>
+   <div className="mobile-drawer-footer"><p>{restaurant.shortAddress}</p><Link className="button button-orange" href="/menu" onClick={()=>setNavOpen(false)}>Find your favourite <Icon name="arrow"/></Link></div>
+  </Dialog>
+  <nav className="mobile-action-bar" aria-label="Quick restaurant actions">
+   <Link href="/menu" aria-current={pathname==="/menu"?"page":undefined}><Icon name="food"/><span>Menu</span></Link>
+   <Link href="/menu#deals"><Icon name="spark"/><span>Deals</span></Link>
+   <Link href="/#find"><Icon name="pin"/><span>Find us</span></Link>
+   <button onClick={open} aria-label={"Open cart, "+count+" items"}><Icon name="bag"/><span>Bag {count>0?"("+count+")":""}</span></button>
+  </nav>
+ </>;
 }

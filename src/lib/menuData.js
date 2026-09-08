@@ -1,8 +1,6 @@
 /**
- * Local menu data — real Sheen items from the brand brief.
- * Used as fallback when Supabase is unreachable (paused project,
- * no env vars, demo mode). This lets the menu page render with
- * real products even without a database connection.
+ * Foodpanda-derived demonstration catalogue; owner confirmation is pending.
+ * Used only in explicit demo mode. Production never falls back to these IDs.
  */
 
 export const LOCAL_MENU = [

@@ -43,3 +43,25 @@ next-env.d.ts
 # local env
 .env.local
 .env*.local
+!.env.example
+
+# Local tooling and verification output
+.npm-cache/
+.tools/
+.next-dev/
+test-results/
+
+# Publishing hygiene
+playwright-report/
+blob-report/
+playwright/.cache/
+/dist/
+/tmp/
+/temp/
+*.log
+*.tmp
+*.bak
+Thumbs.db
+.env
+.env.*
+!.env.example

@@ -1,21 +1,10 @@
 "use client";
-
-import { useCart } from "@/lib/cart";
-import { FALLBACK_MENU_IMAGES } from "@/lib/menuImages";
-
-export default function AddToCart({ item, label = "+" }) {
-  const { add } = useCart();
-  const image = item.image_url || FALLBACK_MENU_IMAGES[item.slug] || null;
-  return (
-    <button
-      type="button"
-      onClick={() =>
-        add({ id: item.id, name: item.name, price_paisa: item.price_paisa, image })
-      }
-      aria-label={`Add ${item.name} to cart`}
-      className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-accent text-lg font-bold leading-none text-accent-foreground transition-colors hover:bg-accent-deep hover:text-foreground"
-    >
-      {label}
-    </button>
-  );
+import {useCart} from "@/lib/cart";
+import {buildCartLine} from "@/lib/cartModel";
+import Icon from "@/components/site/Icon";
+export default function AddToCart({item,onCustomize,customizable=false}){
+ const {addLine}=useCart();
+ return <button type="button" className="add-button" disabled={!item.is_available} onClick={()=>customizable?onCustomize():addLine(buildCartLine(item))} aria-label={(customizable?"Customize ":"Add ")+item.name}>
+  {item.is_available?<><span>{customizable?"Choose":"Add"}</span><Icon name="plus" size={17}/></>:"Unavailable"}
+ </button>;
 }

@@ -1,24 +1,6 @@
 import CheckoutForm from "./CheckoutForm";
-import { PAYMENT_METHODS } from "@/lib/payments";
-
-export const metadata = { title: "Checkout" };
-
-export default function CheckoutPage() {
-  // Read on the server so the enabled/disabled state of card payment comes
-  // from the actual environment, not from a guess in the browser.
-  const methods = PAYMENT_METHODS.map(({ id, label, hint, enabled }) => ({
-    id,
-    label,
-    hint,
-    enabled,
-  }));
-
-  return (
-    <div className="mx-auto max-w-[720px] px-6 py-16">
-      <h1 className="mb-8 text-[clamp(2rem,4.5vw,3rem)] font-extrabold tracking-tight">
-        Checkout
-      </h1>
-      <CheckoutForm methods={methods} />
-    </div>
-  );
+import {IS_DEMO} from "@/lib/restaurantData";
+export const metadata={title:"Your Order",description:"Review your Sheen order, choose delivery or takeaway, and preview the order message.",robots:{index:false,follow:false}};
+export default function CheckoutPage(){
+ return <div className="container checkout-page"><div className="page-intro"><p className="eyebrow">One step closer to your Sheen</p><h1>LET’S WRAP<br/><span className="orange-text">THIS UP.</span></h1><p>{IS_DEMO?"Try the complete order experience. No payment is collected and no order is sent.":"Review your bag. Direct ordering is not connected yet."}</p></div><CheckoutForm/></div>;
 }

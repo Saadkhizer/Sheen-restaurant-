@@ -1,54 +1,22 @@
-import { LOCAL_MENU } from "@/lib/menuData";
-
-let createClient, withTimeout;
-try {
-  createClient = (await import("@/lib/supabase/server")).createClient;
-  withTimeout = (await import("@/lib/withTimeout")).withTimeout;
-} catch {
-  /* Supabase deps may not be configured — local fallback handles it */
+import "server-only";
+import { DEMO_CATEGORIES,normalizeCategories } from "./catalogue.js";
+import { IS_DEMO } from "./restaurantData.js";
+import { withTimeout } from "./withTimeout.js";
+export async function getMenu(){
+ if(IS_DEMO)return {categories:DEMO_CATEGORIES,degraded:false,mode:"demo"};
+ try{
+  const {createClient}=await import("./supabase/server.js");
+  const supabase=await createClient();
+  const result=await withTimeout(supabase.from("menu_categories").select("id, slug, name, sort_order, menu_items(id, slug, name, description, price_paisa, image_url, is_popular, is_available, sort_order)").order("sort_order").order("sort_order",{referencedTable:"menu_items"}),{ms:5000,fallback:null,label:"menu"});
+  if(!result||result.error)throw new Error("Menu unavailable");
+  return {categories:normalizeCategories(result.data||[]),degraded:false,mode:"production"};
+ }catch{
+  // Never silently substitute local slug IDs into production UUID ordering.
+  return {categories:[],degraded:true,mode:"production"};
+ }
 }
-
-/**
- * Menu for the public site. Tries Supabase first, falls back to local
- * data so the menu always renders with real products even without a
- * database connection.
- */
-export async function getMenu() {
-  /* If Supabase env vars aren't set, go straight to local data */
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    !createClient
-  ) {
-    return { categories: LOCAL_MENU, degraded: false };
-  }
-
-  try {
-    const supabase = await createClient();
-
-    const result = await withTimeout(
-      supabase
-        .from("menu_categories")
-        .select(
-          "id, slug, name, sort_order, menu_items(id, slug, name, description, price_paisa, image_url, is_popular, sort_order)"
-        )
-        .order("sort_order")
-        .order("sort_order", { referencedTable: "menu_items" }),
-      { ms: 5000, fallback: null, label: "menu" }
-    );
-
-    if (!result || result.error) return { categories: LOCAL_MENU, degraded: false };
-    return { categories: result.data ?? [], degraded: false };
-  } catch {
-    return { categories: LOCAL_MENU, degraded: false };
-  }
-}
-
-export async function getPopularItems(limit = 4) {
-  const { categories, degraded } = await getMenu();
-  const all = categories.flatMap((c) => c.menu_items ?? []);
-  // `all` is returned too -- a popular main's Small-A size variant isn't
-  // itself popular, so the homepage needs the full list to offer it as a
-  // size option, not just the four cards it renders.
-  return { items: all.filter((i) => i.is_popular).slice(0, limit), all, degraded };
+export async function getPopularItems(limit=4){
+ const result=await getMenu();
+ const all=result.categories.flatMap(category=>category.menu_items);
+ return {...result,all,items:all.filter(item=>item.is_popular).slice(0,limit)};
 }

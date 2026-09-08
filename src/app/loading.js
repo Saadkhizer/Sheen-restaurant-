@@ -1,0 +1,1 @@
+export default function Loading(){return <div className="container section-pad" role="status" aria-label="Loading"><p className="eyebrow mb-6">Getting your Sheen ready</p><div className="loading-block"/></div>;}

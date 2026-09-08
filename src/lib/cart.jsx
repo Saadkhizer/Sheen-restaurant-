@@ -1,98 +1,39 @@
 "use client";
-
-import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useState } from "react";
-
-const CartContext = createContext(null);
-const STORAGE_KEY = "sheen.cart.v1";
-
-function reducer(state, action) {
-  switch (action.type) {
-    case "hydrate":
-      return action.items;
-    case "add": {
-      const qty = action.qty ?? 1;
-      const found = state.find((l) => l.id === action.item.id);
-      if (found) {
-        return state.map((l) =>
-          l.id === action.item.id ? { ...l, qty: Math.min(l.qty + qty, 50) } : l
-        );
-      }
-      return [...state, { ...action.item, qty: Math.min(qty, 50) }];
-    }
-    case "dec":
-      return state
-        .map((l) => (l.id === action.id ? { ...l, qty: l.qty - 1 } : l))
-        .filter((l) => l.qty > 0);
-    case "remove":
-      return state.filter((l) => l.id !== action.id);
-    case "clear":
-      return [];
-    default:
-      return state;
-  }
+import {createContext,useCallback,useContext,useEffect,useMemo,useReducer,useState} from "react";
+import {cartReducer,sanitizeCart,MAX_QUANTITY} from "./cartModel.js";
+const CartContext=createContext(null);
+export function CartProvider({children,catalogue,mode}){
+ const [items,dispatch]=useReducer(cartReducer,[]);
+ const [ready,setReady]=useState(false);
+ const [isOpen,setIsOpen]=useState(false);
+ const [announcement,setAnnouncement]=useState("");
+ const storageKey="sheen.cart.v2."+mode;
+ useEffect(()=>{
+  let stored=[];
+  try{stored=sanitizeCart(JSON.parse(localStorage.getItem(storageKey)||"[]"),catalogue);}catch{}
+  dispatch({type:"hydrate",items:stored});
+  // Browser persistence is intentionally restored after SSR.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  setReady(true);
+ },[catalogue,storageKey]);
+ useEffect(()=>{if(ready){try{localStorage.setItem(storageKey,JSON.stringify(items));}catch{}}},[items,ready,storageKey]);
+ const addLine=useCallback((candidate,showDrawer=true)=>{
+  const [line]=sanitizeCart([candidate],catalogue);
+  if(!line)return false;
+  dispatch({type:"add",line});setAnnouncement(line.name+" added to your order.");
+  if(showDrawer)setIsOpen(true);return true;
+ },[catalogue]);
+ const setQuantity=useCallback((key,qty)=>{
+  if(Number.isInteger(qty)&&qty>=0&&qty<=MAX_QUANTITY)dispatch({type:"quantity",key,qty});
+ },[]);
+ const remove=useCallback(key=>dispatch({type:"remove",key}),[]);
+ const complete=useCallback(keys=>dispatch({type:"complete",keys}),[]);
+ const clear=useCallback(()=>dispatch({type:"clear"}),[]);
+ const open=useCallback(()=>setIsOpen(true),[]);
+ const close=useCallback(()=>setIsOpen(false),[]);
+ const value=useMemo(()=>({items,ready,isOpen,addLine,setQuantity,remove,complete,clear,open,close,catalogue,mode,
+ count:items.reduce((sum,line)=>sum+line.qty,0),subtotal:items.reduce((sum,line)=>sum+line.unitPrice*line.qty,0)
+ }),[items,ready,isOpen,addLine,setQuantity,remove,complete,clear,open,close,catalogue,mode]);
+ return <CartContext.Provider value={value}>{children}<span className="sr-only" role="status" aria-live="polite">{announcement}</span></CartContext.Provider>;
 }
-
-export function CartProvider({ children }) {
-  const [items, dispatch] = useReducer(reducer, []);
-  const [isOpen, setIsOpen] = useState(false);
-  const skipNextPersist = useRef(true);
-
-  // Hydrate after mount, never during render -- reading localStorage on the
-  // server throws, and reading it during render causes a hydration mismatch.
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) dispatch({ type: "hydrate", items: JSON.parse(raw) });
-    } catch {
-      /* corrupt or unavailable storage: start with an empty cart */
-    }
-  }, []);
-
-  useEffect(() => {
-    // The mount's first run of this effect always sees the reducer's
-    // initial [], one render before the hydrate effect's dispatch above
-    // lands. Writing that [] here would beat the hydrate to localStorage
-    // and permanently erase whatever a returning customer had in their
-    // cart. Skip it once; every write after the first is a real change.
-    if (skipNextPersist.current) {
-      skipNextPersist.current = false;
-      return;
-    }
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch {
-      /* private mode / quota: the cart just won't survive a reload */
-    }
-  }, [items]);
-
-  const value = useMemo(() => {
-    const count = items.reduce((n, l) => n + l.qty, 0);
-    const subtotal = items.reduce((n, l) => n + l.price_paisa * l.qty, 0);
-    return {
-      items,
-      count,
-      subtotal,
-      // Adding an item opens the drawer -- the confirmation IS the UI, no
-      // separate toast needed.
-      add: (item, qty = 1) => {
-        dispatch({ type: "add", item, qty });
-        setIsOpen(true);
-      },
-      dec: (id) => dispatch({ type: "dec", id }),
-      remove: (id) => dispatch({ type: "remove", id }),
-      clear: () => dispatch({ type: "clear" }),
-      isOpen,
-      open: () => setIsOpen(true),
-      close: () => setIsOpen(false),
-      toggle: () => setIsOpen((v) => !v),
-    };
-  }, [items, isOpen]);
-
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
-}
-
-export function useCart() {
-  const ctx = useContext(CartContext);
-  if (!ctx) throw new Error("useCart must be used inside <CartProvider>");
-  return ctx;
-}
+export function useCart(){const value=useContext(CartContext);if(!value)throw new Error("useCart requires CartProvider");return value;}

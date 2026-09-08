@@ -1,181 +1,110 @@
-# Sheen — ordering site
+# Sheen — first-meeting website demo
 
-Next.js 16 (App Router, JS) + Tailwind v4 + Supabase. Cash on delivery is
-live; card payment is an adapter waiting on a merchant account.
+A branded restaurant concept built on the existing Next.js App Router, React, Tailwind CSS and Framer Motion architecture. **Direct ordering and payment are not connected.** The complete demo works without Supabase credentials.
 
----
+## Run locally
 
-## Get it running (about 10 minutes)
+Use **Node 22.13 or later** (the repository's `.nvmrc` selects Node 22). The locked Supabase SDK requires Node 22.
 
-```bash
-npm install
-cp .env.example .env.local     # then fill in the Supabase values
-npm run dev                    # http://localhost:3000
+```sh
+npm ci
+npm run dev
 ```
 
-### Supabase
+Open http://localhost:3000. No environment file is needed for demo mode. If a local environment file already sets `NEXT_PUBLIC_ORDER_MODE=production`, change it to `demo` for the meeting and restart/rebuild. Optional variables are documented in `.env.example`.
 
-1. Create a project at supabase.com (the free tier is fine to start).
-2. SQL editor → paste **`supabase/schema.sql`** → Run.
-3. SQL editor → paste **`supabase/seed.sql`** → Run. That loads all 29 menu
-   items with real prices.
-4. Project Settings → API → copy the URL, the anon key and the service role
-   key into `.env.local`.
+For a stable meeting build:
 
-Then verify the policies actually grant access, rather than reading them and
-assuming. The commented block at the bottom of `schema.sql` impersonates
-`anon` and `authenticated` — run it. Postgres checks table privileges
-*before* it evaluates a row-level policy, so a correct policy on a table with
-no `GRANT` fails with `42501 permission denied`, and it fails as an error
-rather than as zero rows.
-
----
-
-## Push to GitHub
-
-```bash
-git init
-git add .
-git commit -m "Sheen ordering site: initial build"
-git branch -M main
-git remote add origin https://github.com/<you>/sheen-orders.git
-git push -u origin main
+```sh
+npm run build
+npm start
 ```
 
-`.env.local` is already gitignored. Check `git status` before the first
-commit anyway — the service role key bypasses row level security entirely,
-and a leaked one means anyone can read every customer's phone number and
-address.
+Keep the server running during the presentation. Set `NEXT_PUBLIC_SITE_URL` to the eventual preview/production origin before building when absolute metadata URLs matter. Public environment values are fixed at build time.
 
-## Deploy
+## Meeting flow
 
-Vercel is the path of least resistance: import the repo, add the same four
-environment variables from `.env.local` in Project Settings → Environment
-Variables, deploy. Add the production domain to Supabase → Authentication →
-URL Configuration when auth gets added later.
+1. `/`: hero, Sheen picks, deals and interactive Formal Sheen ingredient presentation.
+2. `/menu`: search, categories and product choices; `/menu#deals` opens the deal category.
+3. Customize a Formal Sheen: select size, cheese and quantity. Extras are charged per wrap.
+4. Open the bag, then `/checkout`. Use sample customer details; switch delivery/takeaway and preview the WhatsApp message.
+5. Prepare a demo order. The generated `/order/DEMO-XXXXXXXX` receipt contains the complete selection and clearly simulated status steps.
+6. `/#find`: address, listing hours and a Google Maps address search.
 
----
+The demo receipt is stored in memory/sessionStorage in the originating tab, checked for a 24-hour lifetime, and unavailable as a public order lookup. It survives a refresh within that tab when browser storage is allowed. No order or payment is sent. The cart stores product selections in localStorage; checkout customer details are kept in sessionStorage only when a demo receipt is prepared. Use sample details during presentations.
 
-## How it's put together
+WhatsApp is a preview with an explicit copy action while the restaurant number is unknown. When a valid number is configured, an explicit “Open WhatsApp” link becomes available; the customer still decides whether to send. There is no automatic messaging.
 
-```
-src/
-  app/
-    page.js                  home — hero, popular, signature block, find us
-    menu/page.js             full menu, grouped by category
-    checkout/                cart review, details, payment choice
-    order/[code]/            confirmation, looked up by order code
-    actions.js               placeOrder server action
-    globals.css              ALL colour lives here
-  components/
-    site/                    header, footer, hero bloom
-    menu/                    menu card, add-to-cart
-    motion/                  Reveal, Stagger — reduced-motion aware
-  lib/
-    supabase/                browser, server, session, admin clients
-    payments/                provider adapter
-    cart.jsx                 client cart (React state + localStorage)
-    money.js                 paisa → display string
-    menu.js                  menu queries, timeout-wrapped
-  proxy.js                   Next 16's renamed middleware
-supabase/
-  schema.sql                 tables, RLS policies, grants
-  seed.sql                   the real menu
-scripts/contrast.py          palette verification
-```
+## Architecture
 
-### Things that will bite you if you don't know them
+- `src/lib/restaurantData.js`: single business configuration, demo/production mode, unknown phone/WhatsApp/map/reviews, and gated structured-data function.
+- `src/lib/menuData.js`: 37 listing-derived demonstration products. Existing `supabase/seed.sql` contains an older 29-item catalogue; reconcile both with the owner before production.
+- `src/lib/menu.js`: demo adapter returns the local catalogue immediately. Production reads Supabase with a timeout and an explicit unavailable state, never substituting demo slug IDs.
+- `src/lib/catalogue.js`: normalized products and safe visual category regrouping.
+- `src/lib/cartModel.js`, `cart.jsx`: versioned mode-specific persistence, validated quantities, authoritative catalogue pricing, and per-line size/extras/deal choices.
+- `src/lib/orders/demo.js`: customer validation, local preparation, submission deduplication, receipt reading and human-readable WhatsApp summaries.
+- `src/lib/orders/production.js`: disabled production boundary and database identity/price reconciliation helper. **This is preparation for future backend work, not a working order service.**
+- `src/app/actions.js`: direct server ordering is explicitly disabled. The former partial multi-insert path and public service-role receipt lookup are removed.
+- `src/lib/payments/index.js`: card payments remain unsupported; an environment variable cannot turn them on.
+- `src/components/site/Dialog.jsx`: native modal semantics, background inertness, Escape, focus restoration, scroll locking and motion.
+- `src/components/menu/`: local search/category explorer, food/deal cards, product customization and quantity control.
+- `src/components/site/`: shared navigation, 2.5D hero, signature interaction, cart, location, footer and WhatsApp preview.
+- Supabase clients, schema and the narrowly matched auth proxy remain for future work. There are no admin/login pages or account features in this phase.
 
-**`src/proxy.js`, not `middleware.js`.** Next.js 16 renamed both the file and
-the exported function. The matcher is scoped to `/admin` and `/login` only —
-if it matched everything, the public homepage would wait on a Supabase call
-before rendering a byte, and a slow backend would take down the whole site
-instead of just the admin area.
+Money remains integer paisa until display. Product identities and extras are regenerated against the catalogue when restoring the cart, so edited browser prices are not trusted. Browser-only demo protections are not a production security boundary.
 
-**Never `next/font/google`.** That loader downloads fonts from Google
-*during compilation*, on the server. On a network that can't reach
-`fonts.googleapis.com` quickly the dev server prints `✓ Ready` and then never
-answers the first request, with no error — indistinguishable from a firewall
-or VPN problem. The system font stack is used instead. If Sheen supplies a
-brand typeface, use `next/font/local` with the file committed here.
+## Visual system
 
-**Turbopack.** The project was created with `--no-turbopack`, but Next 16.3
-still prints Turbopack in the build banner. It works either way; just know
-which one you're reading logs from.
+One intentional cream/teal/orange theme replaces the old theme toggle. Semantic tokens live in `src/app/globals.css`. Barlow Condensed is the display face; DM Sans is the body face. Both are bundled locally through `next/font/local`; builds do not fetch Google fonts.
 
-**Money is paisa.** Every price is an integer in minor units. Convert only
-at display time with `rupees()` from `lib/money.js`. Floating-point rupees
-is how a rounding error gets into an order total.
+Framer Motion handles restrained section/modal transitions and pointer-reactive hero depth. Ingredient tabs are manually controlled. Native scrolling remains intact. Reduced-motion settings suppress movement; the hero pointer effect is desktop/mouse-only. No Three.js, WebGL or GSAP dependency was added.
 
-**The browser never sends a price.** The cart posts item ids and quantities;
-`placeOrder` re-reads prices from the database and recomputes the total. A
-cart that posts its own total is one a customer can edit in devtools.
+## Images
 
----
+The five original PNGs are preserved. Their optimized 1400px WebP copies total approximately 879 KB instead of 37 MB. All 37 existing Foodpanda menu image sources have local WebP copies, with the source manifest retained in `menuImages.js`. Components use responsive Next Image sizing, selective hero preload and image-failure placeholders.
 
-## Changing the look
+Regenerate assets only when needed:
 
-Every colour is a CSS custom property in `src/app/globals.css`. No component
-contains a hex value, so a rebrand is an edit to `:root` and nothing else.
-
-The palette was derived from Sheen's own menu boards (`#D04129` red,
-`#E0581E` orange → hue 14°), re-fitted to a near-black ground. If you change
-any colour, re-run:
-
-```bash
-python3 scripts/contrast.py
+```sh
+npm run assets
 ```
 
-All ten pairs currently clear WCAG AA. Two rules worth not breaking:
+This uses Sharp and the repository's existing image source URLs. It needs network access for uncached menu sources and can use system curl when Node's CDN certificate validation is unavailable. It also generates the social image and matching favicon/apple icon. Originals are never deleted. Confirm final photography and its permitted public use with the owner.
 
-- **Never white on the accent** — it scores 2.9:1 and fails. Accent-filled
-  buttons take `--accent-foreground` (near-black).
-- **One saturated hue.** The positive/caution/critical tones are
-  deliberately desaturated and reserved for order states, so the page still
-  reads as single-accent.
+## Verification
 
-## Adding the client's photography
+```sh
+npm run lint
+npm test
+npm run contrast
+npm run build
+npm start
+# In a separate terminal, with the server running:
+npm run test:e2e
+```
 
-Menu cards and the hero currently render labelled placeholders. Replace them
-with `next/image`, and add the image host to `remotePatterns` in
-`next.config.mjs` (Supabase Storage is the simplest place to put them).
+The browser suite uses an installed Google Chrome through Playwright in an isolated headless profile; it does not use the owner's personal browser session. It tests widths 320, 375, 390, 430, 768, 1024, 1280, 1440 and 1920, customer journeys, focus/Escape, search, required choices, persistence, WhatsApp preview and local images. Screenshots, traces and JSON results are written to ignored `test-results/`.
 
-- **Hero:** a cut-out (transparent PNG/WebP, background removed). It needs
-  the contact shadow that's already in the markup, or it reads as clip art.
-- **Menu cards:** leave images in their original frame. Cutting out every
-  image flattens the page.
-- Don't desaturate food to "match the palette" — the whole point of the dark
-  ground is that the food is the only saturated thing on screen.
+The contrast script measures eight implemented normal-text token pairs. It is a focused check, not a complete accessibility certification. Browser viewport testing is not a substitute for final iOS Safari/Android device and screen-reader checks.
 
----
+## Before production
 
-## Turning card payments on
+1. Obtain owner confirmation of the menu, prices, portion sizes, deal selections, extras, address, hours, delivery fee/minimum/area, phone, WhatsApp number and social profiles.
+2. Confirm logo artwork, photography, allergens and other food information. Reviews, ratings, coordinates and restaurant history remain unset.
+3. Reconcile the legacy SQL seed with the approved catalogue and migrate customization storage.
+4. Implement atomic order creation through a database transaction/RPC, persistent idempotency, server validation and rate limiting.
+5. Provide staff acceptance/fulfilment workflow and secure receipt access. Review database grants/RLS before using real customer data.
+6. Integrate an approved payment provider only if required, with verified webhooks, failure handling and reconciliation.
+7. Add operational delivery rules, retention/privacy terms, monitoring and support procedures.
+8. Configure the real domain and verified business structured data. Demo mode deliberately uses noindex, blocks crawling and emits an empty sitemap.
+9. Run device, accessibility, security and deployment checks before public launch.
 
-`src/lib/payments/index.js` is an adapter with one unimplemented method.
-Cash on delivery is complete and needs nothing.
+Changing `NEXT_PUBLIC_ORDER_MODE` alone does not enable real ordering. This repository has not been deployed by this phase.
 
-Card is intentionally not half-built. Stripe doesn't serve Pakistani
-merchants, so the realistic options are Safepay, PayFast (PK) or a bank
-gateway — and each needs a merchant account, live credentials and a signed
-webhook secret that only Sheen can obtain. Until `PAYMENT_PROVIDER` is set,
-checkout shows card as "coming soon" rather than offering something that
-can't complete.
+Full implementation details, file manifest and meeting sequence: [Phase 2 handoff](docs/PHASE-2-HANDOFF.md).
 
-Once the merchant account exists:
+On this machine, the verified isolated runtime can start the built demo with:
 
-1. Implement `startCardPayment` for the provider (return `{ redirectUrl,
-   reference }`).
-2. Add a webhook route that verifies the provider's signature and moves
-   `payment_status` to `paid` or `failed`.
-3. Never mark an order paid from the browser redirect — only from the
-   verified webhook. A customer who closes the tab after paying must still
-   end up with a paid order, and one who fakes the return URL must not.
-
-## Not built yet
-
-- Admin view for the kitchen (`/admin` is already gated by the proxy).
-- Order status notifications (SMS/WhatsApp is the norm locally).
-- Accounts. `orders.user_id` is already nullable and pointed at
-  `auth.users`, so accounts can be layered on without a migration.
-- A delivery-radius check. foodpanda handles this today; taking orders
-  directly means someone has to decide how far the shop will deliver.
+```powershell
+.\.tools\node_modules\node\bin\node.exe node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3000
+```

@@ -1,11 +1,5 @@
-/**
- * Menu item images sourced from Sheen's foodpanda listing.
- * Using the CDN URLs directly at 600x600 resolution.
- * Keyed by item slug — MenuCard checks here when image_url is null.
- *
- * If you want to self-host these instead (faster loads, no CDN dependency):
- * download each URL, save to public/images/menu/, and update the paths.
- */
+/** Existing Foodpanda image sources. npm run assets caches optimized local copies.
+ * Retained as the source manifest and optional image-failure fallback. */
 export const FALLBACK_MENU_IMAGES = {
   /* ---- Mains ---- */
   "formal-sheen":
