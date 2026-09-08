@@ -47,13 +47,28 @@ export default function MenuCard({ item, featured = false, allItems = [] }) {
           </div>
         ) : (
           <div
-            className="flex h-40 items-center justify-center bg-[radial-gradient(circle_at_50%_60%,color-mix(in_srgb,var(--accent)_22%,var(--surface))_0%,var(--surface)_72%)] text-[0.6rem] uppercase tracking-[0.16em] text-muted"
+            className="flex h-40 flex-col items-center justify-center gap-2 bg-[radial-gradient(circle_at_50%_60%,color-mix(in_srgb,var(--accent)_16%,var(--surface))_0%,var(--surface)_72%)]"
             aria-hidden="true"
           >
-            {/* Replace with a real photo once it exists -- add it to
-                FALLBACK_MENU_IMAGES or set image_url in Supabase. See README
-                "Adding the client's photography". */}
-            {item.name}
+            <svg
+              viewBox="0 0 24 24"
+              width="28"
+              height="28"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-accent/50"
+            >
+              <path d="M8 3v6a2 2 0 0 1-4 0V3" />
+              <path d="M6 9v12" />
+              <path d="M17 3c-1.5 0-3 2-3 5s1.5 4 3 4" />
+              <path d="M17 3v16" />
+            </svg>
+            <span className="text-[0.6rem] uppercase tracking-[0.16em] text-muted/70">
+              {item.name}
+            </span>
           </div>
         );
 

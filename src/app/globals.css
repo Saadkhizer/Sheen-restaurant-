@@ -156,10 +156,36 @@ body {
   filter: blur(var(--bloom-blur));
 }
 
+/* ---- Light mode ------------------------------------------------
+   Activated by data-theme="light" on <html>. Warm cream ground,
+   dark text, accent stays the same orange. Designed to feel premium
+   and warm, not clinical white. */
+[data-theme="light"] {
+  --background: #FBF8F5;
+  --surface: #FFFFFF;
+  --border: #E8E2DD;
+  --foreground: #1A1412;
+  --muted: #7A706A;
+  --accent: #E04E22;
+  --accent-text: #C43E16;
+  --accent-deep: #F5E6DF;
+  --accent-foreground: #FFFFFF;
+  --tone-positive: #2D8A5E;
+  --tone-caution: #B8920A;
+  --tone-critical: #C43836;
+  --brand-teal: #0F8A83;
+  --bloom-strength: 0.08;
+  --ambient-strength: 0.03;
+  --grain-opacity: 0;
+}
+
 @media (max-width: 768px) {
   :root {
     --bloom-strength: 0.34;
     --section-gap: 3rem;
+  }
+  [data-theme="light"] {
+    --bloom-strength: 0.12;
   }
 }
 

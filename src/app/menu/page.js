@@ -8,6 +8,12 @@ export const metadata = { title: "Menu" };
 export default async function MenuPage() {
   const { categories, degraded } = await getMenu();
   const allItems = categories.flatMap((c) => c.menu_items ?? []);
+  const popularItems = allItems.filter((item) => item.is_popular);
+
+  /* Add a virtual "Popular" entry at the start for the nav */
+  const navCategories = popularItems.length > 0
+    ? [{ id: "cat-popular", slug: "popular", name: "Popular", sort_order: 0 }, ...categories]
+    : categories;
 
   return (
     <div className="mx-auto max-w-[1180px] px-6 py-16">
@@ -26,7 +32,24 @@ export default async function MenuPage() {
         </p>
       )}
 
-      <CategoryNav categories={categories} />
+      <CategoryNav categories={navCategories} />
+
+      {/* Popular section */}
+      {popularItems.length > 0 && (
+        <section id="popular" className="mb-16 scroll-mt-24">
+          <h2 className="mb-3 text-[clamp(1.5rem,3vw,2.2rem)] font-extrabold tracking-tight">
+            Popular
+          </h2>
+          <p className="mb-7 text-sm text-muted">Most ordered right now</p>
+          <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {popularItems.map((item) => (
+              <StaggerItem key={item.id}>
+                <MenuCard item={item} allItems={allItems} />
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </section>
+      )}
 
       {categories.map((cat) => (
         <section key={cat.id} id={cat.slug} className="mb-16 scroll-mt-24">

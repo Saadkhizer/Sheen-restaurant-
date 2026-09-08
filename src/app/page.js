@@ -11,86 +11,79 @@ export default async function HomePage() {
   return (
     <>
       {/* ---------------- HERO ----------------
-          Asymmetric .85/1.15, never centred. The left column stops at five
-          items -- label, headline, paragraph, actions, stats -- because the
-          whitespace between the headline and the button is doing real work. */}
-      <section className="relative mx-auto grid max-w-[1180px] items-center gap-8 overflow-clip px-6 md:min-h-[min(88vh,900px)] md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+          Full-width split layout. Text left, full-bleed image right.
+          The image breaks out of the container to fill the right edge
+          of the viewport for a dramatic, modern look. */}
+      <section className="relative min-h-[60vh] overflow-hidden md:min-h-[min(92vh,960px)]">
         <Bloom />
 
-        {/* On mobile the dish moves ABOVE the headline -- food first -- and
-            breaks vertically instead of horizontally, since there's nowhere
-            sideways to break to. */}
-        <div className="relative z-[1] order-first flex items-center justify-center md:order-last">
-          <div className="relative aspect-square w-[min(104%,420px)] rounded-full border border-foreground/20 bg-[radial-gradient(circle_at_38%_34%,color-mix(in_srgb,var(--accent)_30%,var(--surface))_0%,color-mix(in_srgb,var(--accent-deep)_26%,var(--surface))_46%,var(--surface)_78%)] md:w-[118%] md:max-w-none md:translate-x-[6%]">
-            {/* Shot on solid black, composited with mix-blend-lighten so the
-                black drops out against the dark ground -- a true alpha
-                cut-out is the eventual upgrade once real photography or a
-                background-removal pass is available. */}
-            <div className="absolute inset-0 overflow-hidden rounded-full">
-              <Image
-                src="/images/hero-formal-sheen.png"
-                alt="Formal Sheen, sliced open to show grilled chicken, pickles, garlic sauce and hummus in house-baked bread"
-                fill
-                priority
-                sizes="(max-width: 768px) 90vw, 480px"
-                className="object-cover mix-blend-lighten"
-              />
-            </div>
-            {/* Contact shadow -- without it a cut-out reads as clip art. */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-x-[12%] -bottom-[3%] h-[9%] rounded-[50%] bg-black/35 blur-[26px]"
-            />
-            <div className="absolute -right-1 top-4 z-[2] flex flex-col items-center justify-center rounded-full bg-accent px-4 py-3 leading-none text-accent-foreground shadow-[0_10px_28px_-10px_rgba(0,0,0,0.6)] md:right-3 md:top-8">
-              <span className="text-lg font-extrabold">4.9★</span>
-              <span className="text-[0.55rem] uppercase tracking-[0.1em]">68 reviews</span>
-            </div>
-          </div>
+        {/* Full-bleed background image — covers the right half on desktop,
+            full width on mobile with an overlay */}
+        <div className="absolute inset-0 md:left-[45%]">
+          <Image
+            src="/images/hero-formal-sheen.png"
+            alt="Formal Sheen, sliced open to show grilled chicken, pickles, garlic sauce and hummus in house-baked bread"
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 55vw"
+            className="object-cover"
+          />
+          {/* Gradient overlay — fades image into background on the left edge
+              and darkens on mobile for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[var(--background)] via-[var(--background)]/80 to-transparent md:via-[var(--background)]/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)] via-transparent to-transparent md:hidden" />
         </div>
 
-        <div className="relative z-[2] pb-10 md:pb-0">
-          <p className="noir-label mb-5">Shawarma · Bahria Enclave, Islamabad</p>
-          <h1 className="mb-5 font-extrabold [font-size:var(--display-size)] [letter-spacing:var(--display-tracking)] [line-height:var(--display-leading)]">
-            Big flavour.
-            <br />
-            No <span className="text-accent">shortcuts.</span>
-          </h1>
-          <p className="mb-7 max-w-[44ch] leading-relaxed text-muted">
-            Bread, hummus and sauces made in house, every day. That&apos;s the whole
-            reason it costs what it costs.
-          </p>
-          <div className="mb-8 flex flex-wrap gap-3.5">
-            <Link
-              href="/menu"
-              className="inline-flex h-12 items-center rounded-full bg-accent px-7 font-semibold text-accent-foreground transition-colors hover:bg-accent-deep hover:text-foreground md:h-11"
-            >
-              Order now
-            </Link>
-            <Link
-              href="/#find"
-              className="inline-flex h-12 items-center rounded-full border border-border px-7 font-semibold transition-colors hover:border-accent md:h-11"
-            >
-              Find us
-            </Link>
+        {/* Rating badge — floats over the image */}
+        <div className="absolute right-6 top-24 z-[3] hidden flex-col items-center justify-center rounded-2xl bg-accent px-5 py-4 leading-none text-accent-foreground shadow-[0_10px_40px_-10px_rgba(0,0,0,0.6)] md:flex">
+          <span className="text-2xl font-extrabold">4.9★</span>
+          <span className="text-[0.6rem] uppercase tracking-[0.12em]">68 reviews</span>
+        </div>
+
+        {/* Text content — sits on the left, over the gradient */}
+        <div className="relative z-[2] mx-auto flex min-h-[60vh] max-w-[1180px] items-center px-6 md:min-h-[min(92vh,960px)]">
+          <div className="max-w-xl pb-16 pt-24 md:pb-0 md:pt-0">
+            <p className="noir-label mb-5">Shawarma · Bahria Enclave, Islamabad</p>
+            <h1 className="mb-5 font-extrabold [font-size:var(--display-size)] [letter-spacing:var(--display-tracking)] [line-height:var(--display-leading)]">
+              Big flavour.
+              <br />
+              No <span className="text-accent">shortcuts.</span>
+            </h1>
+            <p className="mb-7 max-w-[44ch] leading-relaxed text-muted">
+              Bread, hummus and sauces made in house, every day. That&apos;s the whole
+              reason it costs what it costs.
+            </p>
+            <div className="mb-8 flex flex-wrap gap-3.5">
+              <Link
+                href="/menu"
+                className="inline-flex h-12 items-center rounded-full bg-accent px-7 font-semibold text-accent-foreground transition-colors hover:bg-accent-deep hover:text-foreground md:h-11"
+              >
+                Order now
+              </Link>
+              <Link
+                href="/#find"
+                className="inline-flex h-12 items-center rounded-full border border-border px-7 font-semibold transition-colors hover:border-accent md:h-11"
+              >
+                Find us
+              </Link>
+            </div>
+
+            <dl className="flex items-center justify-around gap-6 rounded-[var(--radius-panel)] border border-border bg-surface/70 px-5 py-4 backdrop-blur-xl md:inline-flex md:justify-start md:gap-7">
+              {[
+                ["4.9", "68 reviews"],
+                ["2–12", "Open daily"],
+                ["Rs 500", "Min. order"],
+              ].map(([value, label]) => (
+                <div key={label}>
+                  <dt className="sr-only">{label}</dt>
+                  <dd className="text-xl font-bold tracking-tight">{value}</dd>
+                  <dd className="text-[0.72rem] uppercase tracking-[0.1em] text-muted">
+                    {label}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </div>
-          {/* Frosted glass earns its place here only because the bloom is
-              genuinely behind it. Over a flat background it is just a lighter
-              card with extra GPU cost. */}
-          <dl className="flex items-center justify-around gap-6 rounded-[var(--radius-panel)] border border-border bg-surface/70 px-5 py-4 backdrop-blur-xl md:justify-start md:gap-7 md:rounded-none md:border-0 md:border-t md:border-t-border md:bg-transparent md:px-0 md:pb-0 md:pt-5 md:backdrop-blur-none">
-            {[
-              ["4.9", "68 reviews"],
-              ["2–12", "Open daily"],
-              ["Rs 500", "Min. order"],
-            ].map(([value, label]) => (
-              <div key={label}>
-                <dt className="sr-only">{label}</dt>
-                <dd className="text-xl font-bold tracking-tight">{value}</dd>
-                <dd className="text-[0.72rem] uppercase tracking-[0.1em] text-muted">
-                  {label}
-                </dd>
-              </div>
-            ))}
-          </dl>
         </div>
       </section>
 
@@ -286,19 +279,13 @@ export default async function HomePage() {
               Order a Formal Sheen
             </Link>
           </div>
-          <div className="relative order-first aspect-square w-[min(72%,300px)] justify-self-center rounded-full border border-foreground/25 bg-[radial-gradient(circle_at_40%_36%,color-mix(in_srgb,var(--foreground)_16%,transparent)_0%,transparent_68%)] md:order-last md:w-full">
-            <div className="absolute inset-0 overflow-hidden rounded-full">
-              <Image
-                src="/images/signature-formal-sheen.png"
-                alt="Cross-section of Sheen's house-baked bread, torn open to show grilled chicken and garlic sauce"
-                fill
-                sizes="(max-width: 768px) 60vw, 340px"
-                className="object-cover mix-blend-lighten"
-              />
-            </div>
-            <div
-              aria-hidden="true"
-              className="absolute inset-x-[12%] -bottom-[3%] h-[9%] rounded-[50%] bg-black/40 blur-[26px]"
+          <div className="relative order-first aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-panel)] md:order-last">
+            <Image
+              src="/images/signature-formal-sheen.png"
+              alt="Cross-section of Sheen's house-baked bread, torn open to show grilled chicken and garlic sauce"
+              fill
+              sizes="(max-width: 768px) 90vw, 440px"
+              className="object-cover"
             />
           </div>
         </div>
@@ -318,42 +305,60 @@ export default async function HomePage() {
       {/* ---------------- REVIEWS ---------------- */}
       <section id="reviews" className="py-[var(--section-gap)]">
         <div className="mx-auto max-w-[1180px] px-6">
-          <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
-            <div>
-              <p className="noir-label mb-4">What keeps people ordering again</p>
-              <h2 className="text-[clamp(1.8rem,3.6vw,2.8rem)] font-extrabold tracking-tight">
-                4.9★ from 68 reviews
-              </h2>
-            </div>
-            <a
-              href="https://www.foodpanda.pk/restaurant/wgrb/sheen-wgrb"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="font-semibold text-accent-text hover:underline"
-            >
-              Read them on foodpanda →
-            </a>
+          <div className="mb-10">
+            <p className="noir-label mb-4">What keeps people ordering again</p>
+            <h2 className="text-[clamp(1.8rem,3.6vw,2.8rem)] font-extrabold tracking-tight">
+              4.9★ from 84+ reviews
+            </h2>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              [
-                "The bread",
-                "Baked fresh through the day, never held over — the first thing regulars mention.",
-              ],
-              [
-                "The portions",
-                "Loaded, not garnished. Reviewers consistently call out how much you get.",
-              ],
-              [
-                "The hummus",
-                "Creamy, made in house, and the reason the wrap holds together to the last bite.",
-              ],
-            ].map(([title, body], i) => (
-              <Reveal key={title} delay={i * 0.06}>
+              {
+                name: "Zohaib",
+                text: "So glad that I gave this place a shot! If you like authentic shawarmas, then this is your place. I was skeptical about the pricing at first, but the shawarma was big in size.",
+                rating: 5,
+              },
+              {
+                name: "Ayesha",
+                text: "I got the formal sheen and it was one of the best shawarmas I've tried in a long time. Definitely recommended!",
+                rating: 5,
+              },
+              {
+                name: "Zain",
+                text: "The shawarma bread was perfect. The hummus was delicious. The fries were crunchy yet soft. Overall, it was one of the best shawarmas I have eaten in a while.",
+                rating: 5,
+              },
+              {
+                name: "Soha",
+                text: "I didn't expect it to be this good!! Better than ALL shawarmas in Islamabad.",
+                rating: 5,
+              },
+              {
+                name: "Junaid",
+                text: "Ordered AF Sheen — filling and bread was on spot! Fries were crispy on top. Food arrived fresh and was warm!",
+                rating: 5,
+              },
+              {
+                name: "Maamen",
+                text: "Everything was delicious!! My go-to, always!",
+                rating: 5,
+              },
+            ].map((review, i) => (
+              <Reveal key={review.name} delay={i * 0.06}>
                 <div className="h-full rounded-[var(--radius-panel)] border border-border bg-surface p-7">
-                  <h3 className="mb-2 text-lg font-semibold tracking-tight">{title}</h3>
-                  <p className="text-sm leading-relaxed text-muted">{body}</p>
+                  <div className="mb-3 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/15 text-sm font-bold text-accent-text">
+                      {review.name[0]}
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold">{review.name}</h3>
+                      <div className="text-xs text-accent-text">
+                        {"★".repeat(review.rating)}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-sm leading-relaxed text-muted">&ldquo;{review.text}&rdquo;</p>
                 </div>
               </Reveal>
             ))}
@@ -393,6 +398,31 @@ export default async function HomePage() {
               <p className="text-sm text-muted">Rs 99 delivery · Rs 500 minimum</p>
             </div>
           </div>
+
+          {/* Google Maps embed */}
+          <div className="mt-7 overflow-hidden rounded-[var(--radius-panel)] border border-border">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3318.5!2d73.09!3d33.65!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sBahria%20Enclave%2C%20Islamabad!5e0!3m2!1sen!2spk!4v1"
+              width="100%"
+              height="350"
+              style={{ border: 0 }}
+              allowFullScreen=""
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Sheen location on Google Maps"
+              className="w-full"
+            />
+          </div>
+          <p className="mt-3 text-center text-sm text-muted">
+            <a
+              href="https://maps.google.com/?q=Escape+Heights+Plaza+61+Sector+G+Avenue+1+Bahria+Enclave+Islamabad"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-accent-text hover:underline"
+            >
+              Open in Google Maps →
+            </a>
+          </p>
         </div>
       </section>
     </>

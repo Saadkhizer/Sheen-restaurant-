@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/lib/cart";
 import Logo from "./Logo";
+import ThemeToggle from "./ThemeToggle";
 
 /* Transparent over the hero, frosted past 80px. The BACKGROUND transitions,
    never the height -- nav bars that shrink on scroll cause layout jank. */
@@ -49,6 +50,8 @@ export default function SiteHeader() {
           ))}
         </nav>
 
+        <div className="flex items-center gap-3">
+        <ThemeToggle />
         <button
           type="button"
           onClick={open}
@@ -74,6 +77,7 @@ export default function SiteHeader() {
             )}
           </AnimatePresence>
         </button>
+        </div>
       </div>
     </header>
   );

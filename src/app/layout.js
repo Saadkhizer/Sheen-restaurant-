@@ -1,5 +1,6 @@
 import "./globals.css";
 import { CartProvider } from "@/lib/cart";
+import { ThemeProvider } from "@/lib/theme";
 import SiteHeader from "@/components/site/SiteHeader";
 import SiteFooter from "@/components/site/SiteFooter";
 import CartDrawer from "@/components/site/CartDrawer";
@@ -35,14 +36,16 @@ export default function RootLayout({ children }) {
         >
           Skip to content
         </a>
-        <CartProvider>
-          <SiteHeader />
-          <main id="main" className="flex-1">
-            {children}
-          </main>
-          <SiteFooter />
-          <CartDrawer />
-        </CartProvider>
+        <ThemeProvider>
+          <CartProvider>
+            <SiteHeader />
+            <main id="main" className="flex-1">
+              {children}
+            </main>
+            <SiteFooter />
+            <CartDrawer />
+          </CartProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

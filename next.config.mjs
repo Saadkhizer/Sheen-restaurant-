@@ -16,7 +16,7 @@ const nextConfig = {
     // next/image refuses remote hosts that are not listed here — add real
     // image CDN / Supabase storage hostnames per project.
     remotePatterns: [
-      // { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "images.deliveryhero.io" },
     ],
   },
 };
