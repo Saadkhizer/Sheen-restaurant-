@@ -14,6 +14,9 @@ export default function SignatureExperience({item}){
   {name:"The finish",title:"A LITTLE\nSAUCE ENERGY.",copy:"Garlic sauce and hummus finish this combination."},
  ];
  return <section className="signature-section section-pad"><div className="container signature-grid">
+  {/* ===== rev 5: the added collage thumbnails + idle-float motion were REMOVED
+      (they looked bad). Back to the original single arched image that reacts to
+      the active ingredient tab. ===== */}
   <div className="signature-media"><motion.div animate={{rotate:reduce?0:[-2,0,2][active],scale:reduce?1:[1,1.03,1.05][active]}} transition={{duration:.5}}><FoodImage src={item.image} fallback={item.fallbackImage} alt={item.name} sizes="(max-width: 767px) 100vw, 50vw"/></motion.div><span className="signature-index" aria-hidden="true">0{active+1} / 03</span></div>
   <div className="signature-copy"><p className="eyebrow">Inside the Formal Sheen</p><h2>{details[active].title}</h2><p className="signature-description" aria-live="polite">{details[active].copy}</p>
    <div className="ingredient-tabs" role="group" aria-label="Explore the ingredients">{details.map((detail,index)=><button key={detail.name} aria-pressed={active===index} onClick={()=>setActive(index)}><span>0{index+1}</span>{detail.name}</button>)}</div>

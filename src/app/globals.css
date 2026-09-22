@@ -449,3 +449,55 @@ a,button,input,textarea {touch-action:manipulation}
  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
  .hero-food-stage{transform:none!important}
 }
+
+/* ===== ADDED: scroll-world hero theming =====================================
+   The scrub engine ships its own defaults inside @layer sw, so this plain
+   :root block wins without any specificity hacks. Everything here points at
+   the site's existing brand tokens so the hero reads as part of Sheen rather
+   than as a bolted-on widget — including the fonts.
+
+   The ground stays dark because the clips themselves are rendered over a dark
+   ground; a cream --sw-bg would show as a hard edge around the video.
+   To remove: delete this whole block. Nothing else references --sw-*.
+   ========================================================================= */
+:root {
+ --sw-bg:#0b0b0c;
+ --sw-ink:var(--surface-cream);
+ --sw-accent:var(--brand-orange);
+ --sw-font-display:var(--font-heading),sans-serif;
+ --sw-font-body:var(--font-body),sans-serif;
+}
+/* The site header is sticky at z-index 40 and sits over the hero; push the
+   engine's own copy clear of it on short screens. */
+@media (max-height:640px){
+ .sw-copy {bottom:calc(24px + env(safe-area-inset-bottom))}
+}
+
+/* rev 3: the flight is the hero now, so its title is the real <h1>. Match the
+   site's heading treatment (uppercase, heavy, tight) instead of the engine's
+   lighter default, and let the accent word pick up the brand orange. */
+.sw-title {font-weight:800;line-height:.96;letter-spacing:-.018em;text-transform:uppercase}
+.sw-title em {font-style:normal;color:var(--brand-orange)}
+
+/* rev 4: mid-page blocks. A full-bleed dark stage dropped between two cream
+   sections cuts hard at both edges and reads as a foreign object. Masking the
+   top and bottom lets the footage dissolve into the page instead. Only applied
+   to blocks marked .sw-inline — the hero has nothing above it to blend with. */
+.sw-inline .sw-stage {
+ -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 9%,#000 91%,transparent 100%);
+ mask-image:linear-gradient(to bottom,transparent 0,#000 9%,#000 91%,transparent 100%);
+}
+/* the copy would fade out with everything else, so lift it back */
+.sw-inline .sw-copy {bottom:calc(clamp(40px,9vh,96px) + 5vh + env(safe-area-inset-bottom))}
+@media (prefers-reduced-motion:reduce){
+ .sw-inline .sw-stage {-webkit-mask-image:none;mask-image:none}
+}
+/* ===== END scroll-world hero theming ===================================== */
+
+/* ===== ADDED: category-strip motion (rev 5: signature collage removed) ===== */
+/* Per-card hover lift for the header-area category shortcuts. The whole
+   strip's scroll-reveal is handled by <Reveal> in page.js. */
+.service-grid>a{transition:transform .25s ease,color .25s ease}
+.service-grid>a:hover{transform:translateY(-4px)}
+.service-grid>a:hover>svg:first-child{color:var(--brand-orange)}
+/* ===== END ADDED ===== */
