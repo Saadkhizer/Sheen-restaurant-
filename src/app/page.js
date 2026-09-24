@@ -14,12 +14,24 @@ import Reveal from "@/components/motion/Reveal";
 // ===== ADDED: scroll-world cinematic hero =====
 import ScrollWorld from "@/components/site/ScrollWorld";
 import {sheenWorldHero} from "@/lib/scrollWorld"; // rev5: mid/late blocks removed
+import ProductCarousel from "@/components/site/ProductCarousel"; // rev6: mid-section product carousel
 // ===== END ADDED =====
 export const metadata={alternates:{canonical:"/"}};
 export default async function HomePage(){
  const {items,all}=await getPopularItems(3);
  const formal=all.find(item=>item.slug==="formal-sheen");
  const deals=["solo-sheen","double-sawari","family-sheen"].map(slug=>all.find(item=>item.slug===slug)).filter(Boolean);
+ // ===== ADDED (rev6): items for the mid-section product carousel =====
+ // Real menu products (with images + real prices) first, then the food photos
+ // the client sent as showcase cards (no price shown for those).
+ const carouselItems=[
+  ...all.filter(i=>i.image_url).map(i=>({img:i.image_url,name:i.name,price:rupees(i.price_paisa)})),
+  {img:"/images/gallery/gallery-3-loaded-fries.jpg",name:"Loaded Fries"},
+  {img:"/images/gallery/gallery-4-choc-chip-cookies.jpg",name:"Choc Chip Cookies"},
+  {img:"/images/gallery/gallery-6-icecream.jpg",name:"Ice Cream"},
+  {img:"/images/gallery/gallery-5-dark-cookies.jpg",name:"Double Choc"},
+ ];
+ // ===== END ADDED =====
  return <div className={styles.page}>
   {/* ===== ADDED (rev 3): scroll-world block 1 of 3 — THE HERO =========
       This replaced the old static hero entirely. Scene 0 carries the page's
@@ -59,6 +71,9 @@ export default async function HomePage(){
       here and re-import sheenWorldMid from @/lib/scrollWorld.
       ================================================================== */}
   <section className="deals-section section-pad"><div className="container"><div className="section-heading"><div><p className="eyebrow">Bring your appetite. Or your people.</p><h2>DEALS.<br/><span className="orange-text">SHEELS.</span></h2></div><div><p>A little for you. A little for the whole crew.</p><Link href="/menu#deals" className="text-link">Explore all deals <Icon name="arrow"/></Link></div></div><div className="deals-grid">{deals.map((item,index)=><Reveal key={item.id} delay={index*.06}><DealCard item={item} index={index}/></Reveal>)}</div></div></section>
+  {/* ===== ADDED (rev6): modern product carousel in the mid-section ===== */}
+  <ProductCarousel items={carouselItems}/>
+  {/* ===== END ADDED (rev6) ===== */}
   {/* ===== ADDED: scroll-reveal on the signature (photo) section =====
       The whole photo section now slides/fades in on scroll (same <Reveal>
       motion as the rest of the page). The two collage images inside it also
