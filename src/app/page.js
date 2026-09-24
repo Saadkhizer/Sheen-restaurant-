@@ -22,15 +22,9 @@ export default async function HomePage(){
  const formal=all.find(item=>item.slug==="formal-sheen");
  const deals=["solo-sheen","double-sawari","family-sheen"].map(slug=>all.find(item=>item.slug===slug)).filter(Boolean);
  // ===== ADDED (rev6): items for the mid-section product carousel =====
- // Real menu products (with images + real prices) first, then the food photos
- // the client sent as showcase cards (no price shown for those).
- const carouselItems=[
-  ...all.filter(i=>i.image_url).map(i=>({img:i.image_url,name:i.name,price:rupees(i.price_paisa)})),
-  {img:"/images/gallery/gallery-3-loaded-fries.jpg",name:"Loaded Fries"},
-  {img:"/images/gallery/gallery-4-choc-chip-cookies.jpg",name:"Choc Chip Cookies"},
-  {img:"/images/gallery/gallery-6-icecream.jpg",name:"Ice Cream"},
-  {img:"/images/gallery/gallery-5-dark-cookies.jpg",name:"Double Choc"},
- ];
+ // Pulls straight from real menu items that have a photo (name + real price
+ // + image). Attach a photo to any menu item and it shows up here automatically.
+ const carouselItems=all.filter(i=>i.image_url).map(i=>({img:i.image_url,name:i.name,price:rupees(i.price_paisa)}));
  // ===== END ADDED =====
  return <div className={styles.page}>
   {/* ===== ADDED (rev 3): scroll-world block 1 of 3 — THE HERO =========
