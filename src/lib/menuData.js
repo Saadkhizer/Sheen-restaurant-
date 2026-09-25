@@ -149,7 +149,7 @@ export const LOCAL_MENU = [
         name: "Double Sawari",
         description: "1 Formal and 1 KF Sheen, 2 fries and 2 drinks",
         price_paisa: 233300,
-        image_url: null,
+        image_url: "/images/gallery/gallery-9-tray.jpg",
         is_popular: false,
         sort_order: 12,
       },
@@ -171,7 +171,7 @@ export const LOCAL_MENU = [
         description:
           "1 Formal, 1 KF, 1 AF, 1 Loaded Sheen, 1 loaded fries, 1 hummus and pita, 4 drinks",
         price_paisa: 488800,
-        image_url: null,
+        image_url: "/images/gallery/gallery-8-spread.jpg",
         is_popular: false,
         sort_order: 14,
       },
