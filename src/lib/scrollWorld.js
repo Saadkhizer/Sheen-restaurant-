@@ -28,7 +28,7 @@ const ALL = {
    id:"street", label:"The Street",
    still:`${B}/still0.jpg`, stillMobile:`${B}/still0-m.jpg`,
    clip:`${B}/leg0.mp4`, clipMobile:`${B}/leg0-m.mp4`,
-   scroll:2.4, linger:.3,  // rev5: slowed hero (was 1.5) — less fast
+   scroll:3.0, linger:.3,  // rev7: slowed hero more (was 2.4)
    // ===== ADDED (rev 3): this scene IS the hero now =====================
    // The old <section className="hero"> was removed from page.js, so this
    // scene carries what that section carried: the page's only <h1>, the
@@ -50,7 +50,7 @@ const ALL = {
    id:"inside", label:"Inside",
    still:`${B}/still1.jpg`, stillMobile:`${B}/still1-m.jpg`,
    clip:`${B}/leg1.mp4`, clipMobile:`${B}/leg1-m.mp4`,
-   scroll:2.0, linger:.22,  // rev5: slowed hero (was 1.25) — less fast
+   scroll:2.6, linger:.22,  // rev7: slowed hero more (was 2.0)
    eyebrow:"The room",
    title:"Not a counter you queue at.",
    body:"Teal and orange chairs, proper tables, a mural on the wall. Somewhere to actually sit down.",
