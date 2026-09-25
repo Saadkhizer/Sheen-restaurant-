@@ -508,8 +508,9 @@ a,button,input,textarea {touch-action:manipulation}
 .pcf-head h2{font-size:clamp(2.1rem,5.5vw,3.4rem)}
 .pcf-viewport{position:relative;-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);cursor:grab;touch-action:pan-y}
 .pcf-viewport:active{cursor:grabbing}
-.pcf-track{display:flex;gap:20px;width:max-content;align-items:center;padding:26px 0 12px;will-change:transform}
-.pcf-card{position:relative;margin:0;flex:0 0 auto;width:clamp(200px,52vw,290px);aspect-ratio:3/4;border-radius:22px;overflow:hidden;background:var(--brand-teal-dark);box-shadow:var(--shadow-deep);transform-origin:center;will-change:transform,opacity}
+/* rev9: bigger center-focused cards so the loop copy is never seen next to itself */
+.pcf-track{display:flex;gap:26px;width:max-content;align-items:center;padding:26px 0 12px;will-change:transform}
+.pcf-card{position:relative;margin:0;flex:0 0 auto;width:clamp(250px,80vw,360px);aspect-ratio:4/5;border-radius:22px;overflow:hidden;background:var(--brand-teal-dark);box-shadow:var(--shadow-deep);transform-origin:center;will-change:transform,opacity}
 .pcf-card img{width:100%;height:100%;object-fit:cover;display:block;-webkit-user-drag:none;user-select:none}
 .pcf-card::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(8,7,6,.72),transparent 46%)}
 .pcf-card.pcf-center{outline:3px solid var(--brand-orange);outline-offset:-3px}
