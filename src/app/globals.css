@@ -527,7 +527,8 @@ a,button,input,textarea {touch-action:manipulation}
 
 /* ============ rev10: premium header + mobile bar (start) ============ */
 .site-header{transition:background-color .35s ease,box-shadow .35s ease,border-color .35s ease}
-.site-header[data-scrolled="true"]{background:rgb(255 248 239 / .78);-webkit-backdrop-filter:saturate(170%) blur(16px);backdrop-filter:saturate(170%) blur(16px);border-bottom-color:rgb(7 63 59 / .08);box-shadow:0 10px 30px -18px rgb(7 63 59 / .35)}
+/* rev11: .78 → .92 so the bar stays cream over the dark story hero */
+.site-header[data-scrolled="true"]{background:rgb(255 248 239 / .92);-webkit-backdrop-filter:saturate(170%) blur(16px);backdrop-filter:saturate(170%) blur(16px);border-bottom-color:rgb(7 63 59 / .08);box-shadow:0 10px 30px -18px rgb(7 63 59 / .35)}
 .brand-lockup{transition:transform .35s cubic-bezier(.2,.8,.2,1);transform-origin:left center}
 .site-header[data-scrolled="true"] .brand-lockup{transform:scale(.9)}
 .desktop-nav a::before{content:"";position:absolute;bottom:5px;left:0;right:0;height:2px;background:var(--brand-orange);transform:scaleX(0);transform-origin:right;transition:transform .3s cubic-bezier(.2,.8,.2,1)}

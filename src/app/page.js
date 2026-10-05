@@ -12,9 +12,11 @@ import MenuCard from "@/components/menu/MenuCard";
 import DealCard from "@/components/menu/DealCard";
 import Reveal from "@/components/motion/Reveal";
 // ===== ADDED: scroll-world cinematic hero =====
-import ScrollWorld from "@/components/site/ScrollWorld";
-import {sheenWorldHero} from "@/lib/scrollWorld"; // rev5: mid/late blocks removed
+// rev11: ScrollWorld no longer rendered — kept for rollback
+// import ScrollWorld from "@/components/site/ScrollWorld";
+// import {sheenWorldHero} from "@/lib/scrollWorld"; // rev5: mid/late blocks removed
 import ProductCarousel from "@/components/site/ProductCarousel"; // rev6: mid-section product carousel
+import ShawarmaStory from "@/components/site/ShawarmaStory"; // rev11: scroll-driven food story hero
 // ===== END ADDED =====
 export const metadata={alternates:{canonical:"/"}};
 export default async function HomePage(){
@@ -34,7 +36,12 @@ export default async function HomePage(){
       To restore the old single 8-screen block: use <ScrollWorld
       config={sheenWorld}/> here and delete blocks 2 and 3 below.
       ================================================================== */}
-  <ScrollWorld config={sheenWorldHero}/>
+  {/* ===== CHANGED (rev11): the 4-video scroll flight is replaced by the
+      ShawarmaStory hero (street → inside → ingredients → assembled wrap).
+      Rollback: swap the line below for <ScrollWorld config={sheenWorldHero}/>
+      ===== */}
+  <ShawarmaStory price={formal?rupees(formal.price_paisa):null}/>
+  {/* ===== END CHANGED (rev11) ===== */}
   {/* ===== END block 1 ===== */}
   {/* ===== REMOVED (rev 3): the old static hero ======================
       <section className="hero"> lived here: the "BIG ON SHAWARMA."
