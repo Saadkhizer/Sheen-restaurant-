@@ -19,6 +19,17 @@
 // Scroll is never hijacked: the section is simply tall and its stage is
 // sticky. Reduced-motion users get a complete static hero (see the CSS).
 //
+// ===== rev12: the Formal Sheen is now TAKEN APART on scroll ================
+// The finished wrap appears, then dismantles: its five real ingredients fly
+// out along dotted trails, each wearing its name tag, while the "camera"
+// (a gentle 3D tilt + push-in on the whole composition) drifts around them
+// and a numbered ingredient list on the left ticks along. At the end they
+// spiral back into the centre and the wrap re-forms with a shockwave ring.
+// Pure transform/opacity + one SVG line per ingredient — still no video,
+// no new dependency, nothing paid. (The "scrubbed fly-through" idea from the
+// scroll-world technique, minus the generated video.)
+// =============================================================================
+//
 // To roll back: in src/app/page.js swap <ShawarmaStory/> for
 // <ScrollWorld config={sheenWorldHero}/> — those files are untouched.
 // ============================================================================
@@ -58,8 +69,8 @@ const INGREDIENTS = [
     id: "garlic",
     name: "Garlic sauce",
     note: "Our signature garlic sauce. Creamy, no apologies.",
-    x: 13,
-    y: 40,
+    x: 14,
+    y: 33, // rev12: 40 → 33 so its name tag never collides with the caption / rail
   },
   {
     id: "hummus",
@@ -94,20 +105,22 @@ function Ingredient({ p, item, i }) {
   const t0 = T.food + i * T.step;
   const g0 = T.gather[0] + i * 0.012,
     g1 = T.gather[1] - (INGREDIENTS.length - 1 - i) * 0.008;
+  const dir = i % 2 ? -1 : 1; // alternate spin direction
+  // rev12: fly OUT from the wrapper's centre (pull 0 → 1), hold, spiral back IN (→ 0)
+  const stops = mono([t0 - 0.015, t0 + 0.05, g0, g1]);
+  const pull = useTransform(p, stops, [0, 1, 1, 0]);
   // arrive → stay bright while it is the one being talked about → settle dimmer → gather
   const oIn = last
-    ? mono([t0 - 0.005, t0 + 0.04, g0, g1])
-    : mono([t0 - 0.005, t0 + 0.04, t0 + T.step, t0 + T.step + 0.03, g0, g1]);
-  const oOut = last ? [0, 1, 1, 0] : [0, 1, 1, 0.6, 0.6, 0];
+    ? mono([t0 - 0.01, t0 + 0.03, g0, g1 - 0.01, g1])
+    : mono([t0 - 0.01, t0 + 0.03, t0 + T.step, t0 + T.step + 0.03, g0, g1 - 0.01, g1]);
+  const oOut = last ? [0, 1, 1, 1, 0] : [0, 1, 1, 0.7, 0.7, 0.7, 0];
   const opacity = useTransform(p, oIn, oOut);
-  const pull = useTransform(p, mono([t0, t0 + 0.05, g0, g1]), [1.22, 1, 1, 0]); // 1 = resting spot, 0 = centre of the wrap
+  // gentle depth drift while the camera moves (each ingredient at its own depth)
+  const drift = useTransform(p, mono([T.food, T.gather[0]]), [0, (i % 2 ? 1 : -1) * (10 + i * 4)]);
   const x = useTransform(pull, (v) => `${item.x * v}%`);
-  const y = useTransform(pull, (v) => `${item.y * v}%`);
-  const scale = useTransform(
-    p,
-    mono([t0, t0 + 0.05, g0, g1]),
-    [0.84, 1, 1, 0.32],
-  );
+  const y = useTransform([pull, drift], ([v, d]) => `calc(${item.y * v}% + ${d * v}px)`);
+  const scale = useTransform(p, stops, [0.3, 1, 1, 0.3]);
+  const rotate = useTransform(p, stops, [-70 * dir, 0, 0, 200 * dir]);
   const ring = useTransform(
     p,
     mono([t0 + 0.02, t0 + 0.045, t0 + T.step - 0.01, t0 + T.step + 0.01]),
@@ -115,24 +128,66 @@ function Ingredient({ p, item, i }) {
   );
   const ringFade = useTransform(p, [T.gather[0] - 0.02, T.gather[0]], [1, 0]);
   const ringO = useTransform([ring, ringFade], ([a, b]) => a * b);
+  const trailO = useTransform(p, mono([t0, t0 + 0.05, g0, g1]), [0, 0.55, 0.55, 0]);
   return (
-    <motion.div
-      className={s.ingSlot}
-      style={{ x, y, "--x": item.x, "--y": item.y }}
-      aria-hidden="true"
-    >
-      <motion.div className={s.ing} style={{ opacity, scale }}>
-        <img
-          src={`${B}/${item.id}.webp`}
-          alt=""
-          width={420}
-          height={420}
-          loading="eager"
-          decoding="async"
+    <>
+      {/* dotted trail from the centre to this ingredient (% of the same box the slot uses) */}
+      <svg className={s.layer} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <motion.line
+          x1="50"
+          y1="50"
+          x2={50 + item.x}
+          y2={50 + item.y}
+          className={s.trail}
+          vectorEffect="non-scaling-stroke"
+          style={{ pathLength: pull, opacity: trailO }}
         />
-        <motion.span className={s.ingRing} style={{ opacity: ringO }} />
+      </svg>
+      <motion.div
+        className={`${s.layer} ${s.ingSlot}`}
+        style={{ x, y, "--x": item.x, "--y": item.y }}
+        aria-hidden="true"
+      >
+        <motion.div className={s.ing} style={{ opacity, scale }}>
+          <motion.span className={s.spin} style={{ rotate }}>
+            <img
+              src={`${B}/${item.id}.webp`}
+              alt=""
+              width={420}
+              height={420}
+              loading="eager"
+              decoding="async"
+            />
+          </motion.span>
+          <motion.span className={s.ingRing} style={{ opacity: ringO }} />
+          {/* rev12: the name tag that travels with the ingredient */}
+          <span className={s.tag}>
+            <b>{String(i + 1).padStart(2, "0")}</b> {item.name}
+          </span>
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </>
+  );
+}
+
+// rev12: the numbered ingredient list on the left — ticks along as you scroll
+function TrackerItem({ p, item, i }) {
+  const t0 = T.food + i * T.step;
+  const opacity = useTransform(p, mono([t0 - 0.01, t0 + 0.02, t0 + T.step, t0 + T.step + 0.03]), [0.28, 1, 1, 0.62]);
+  const x = useTransform(p, mono([t0 - 0.01, t0 + 0.03]), [-10, 0]);
+  const tick = useTransform(p, mono([t0 + T.step - 0.005, t0 + T.step + 0.02]), [0, 1]);
+  const dot = useTransform(p, mono([t0, t0 + 0.02, t0 + T.step, t0 + T.step + 0.02]), [0.35, 1, 1, 0]);
+  return (
+    <motion.li style={{ opacity, x }}>
+      <span className={s.trackNum}>{String(i + 1).padStart(2, "0")}</span>
+      <span className={s.trackName}>{item.name}</span>
+      <span className={s.trackMark}>
+        <motion.i style={{ opacity: dot }} />
+        <motion.svg viewBox="0 0 12 12" style={{ opacity: tick }}>
+          <path d="M2 6.4 4.8 9 10 3.2" />
+        </motion.svg>
+      </span>
+    </motion.li>
   );
 }
 
@@ -186,16 +241,19 @@ export default function ShawarmaStory({ price }) {
   );
   // chapter 3 — ingredients
   const foodEyebrowO = useTransform(p, [0.38, 0.44, 0.78, 0.82], [0, 1, 1, 0]);
-  const wrapO = useTransform(
-    p,
-    [0.36, 0.44, T.gather[0], T.gather[1]],
-    [0, 0.4, 0.4, 1],
-  );
-  const wrapScale = useTransform(
-    p,
-    [0.36, 0.44, T.gather[0], 0.92],
-    [0.66, 0.78, 0.78, 1],
-  );
+  // rev12: the whole wrap shows first, DISMANTLES (fades as its ingredients fly out),
+  // stays gone while the ingredients are shown, then RE-FORMS at the merge
+  const wrapO = useTransform(p, [0.36, 0.41, 0.43, 0.5, 0.86, 0.92], [0, 1, 1, 0, 0, 1]);
+  const wrapScale = useTransform(p, [0.36, 0.43, 0.5, 0.86, 0.92], [0.88, 1, 1.07, 0.7, 1]);
+  const wrapRot = useTransform(p, [0.43, 0.5, 0.86, 0.92], [0, -4, 6, 0]);
+  // rev12: "camera" — a slow 3D tilt + push-in over the whole composition
+  const camRotY = useTransform(p, [0.42, 0.62, 0.8, 0.88], [-10, 8, 0, 0]);
+  const camRotX = useTransform(p, [0.42, 0.62, 0.8, 0.88], [6, -4, 0, 0]);
+  const camScale = useTransform(p, [0.42, 0.7, 0.88, 0.94], [1, 1.07, 1, 1]);
+  // rev12: shockwave ring when the wrap re-forms
+  const burstO = useTransform(p, [0.86, 0.89, 0.95], [0, 0.9, 0]);
+  const burstS = useTransform(p, [0.86, 0.95], [0.3, 1.55]);
+  const trackO = useTransform(p, [0.38, 0.44, 0.8, 0.85], [0, 1, 1, 0]);
   // chapter 4 — assembled (signature move: the glow blooms, the wrap stays put)
   const glowO = useTransform(p, [0.36, 0.46], [0, 1]);
   const glowScale = useTransform(p, [0.42, 1], [0.9, 1.18]);
@@ -262,22 +320,32 @@ export default function ShawarmaStory({ price }) {
           {/* composition: the wrap + its ingredients */}
           <div className={s.comp}>
             <motion.div
-              className={s.glow}
-              style={{ opacity: glowO, scale: glowScale }}
-              aria-hidden="true"
-            />
-            <motion.img
-              className={s.wrap}
-              src={`${B}/wrap.webp`}
-              alt="Formal Sheen — grilled chicken, pickles, garlic sauce and hummus in Sheen house bread"
-              width={900}
-              height={1012}
-              decoding="async"
-              style={{ opacity: wrapO, scale: wrapScale }}
-            />
-            {INGREDIENTS.map((item, i) => (
-              <Ingredient key={item.id} p={p} item={item} i={i} />
-            ))}
+              className={s.cam}
+              style={{ rotateX: camRotX, rotateY: camRotY, scale: camScale }}
+            >
+              <motion.div
+                className={s.glow}
+                style={{ opacity: glowO, scale: glowScale }}
+                aria-hidden="true"
+              />
+              <motion.span
+                className={s.burst}
+                style={{ opacity: burstO, scale: burstS }}
+                aria-hidden="true"
+              />
+              <motion.img
+                className={s.wrap}
+                src={`${B}/wrap.webp`}
+                alt="Formal Sheen — grilled chicken, pickles, garlic sauce and hummus in Sheen house bread"
+                width={900}
+                height={1012}
+                decoding="async"
+                style={{ opacity: wrapO, scale: wrapScale, rotate: wrapRot }}
+              />
+              {INGREDIENTS.map((item, i) => (
+                <Ingredient key={item.id} p={p} item={item} i={i} />
+              ))}
+            </motion.div>
           </div>
 
           {/* copy: every chapter's words share one spot, one at a time */}
@@ -323,13 +391,19 @@ export default function ShawarmaStory({ price }) {
 
             <div className={s.foodCopy} aria-hidden="true">
               <motion.p className={s.eyebrow} style={{ opacity: foodEyebrowO }}>
-                Inside every Formal Sheen
+                The Formal Sheen, taken apart
               </motion.p>
               <div className={s.captions}>
                 {INGREDIENTS.map((item, i) => (
                   <Caption key={item.id} p={p} item={item} i={i} />
                 ))}
               </div>
+              {/* rev12: numbered ingredient list that ticks along */}
+              <motion.ol className={s.tracker} style={{ opacity: trackO }}>
+                {INGREDIENTS.map((item, i) => (
+                  <TrackerItem key={item.id} p={p} item={item} i={i} />
+                ))}
+              </motion.ol>
             </div>
 
             <motion.div
@@ -381,4 +455,4 @@ export default function ShawarmaStory({ price }) {
     </section>
   );
 }
-// ===== END rev11 =====
+// ===== END rev11 / rev12 =====
